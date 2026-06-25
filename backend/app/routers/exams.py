@@ -77,6 +77,43 @@ def generate_exam(payload: GenerateExamRequest, db: Session = Depends(get_db)) -
     )
 
 
+@router.post("/generate-practice", response_model=GenerateExamResponse)
+def generate_practice(payload: GenerateExamRequest, db: Session = Depends(get_db)) -> GenerateExamResponse:
+    questions = db.query(Question).order_by(Question.topic, Question.difficulty, Question.id).all()
+    if not questions:
+        raise HTTPException(status_code=404, detail="No practice questions found.")
+
+    user = None
+    if payload.username:
+        user = db.query(User).filter(User.username == payload.username).first()
+        if not user:
+            user = User(username=payload.username)
+            db.add(user)
+            db.flush()
+
+    exam = Exam(
+        user_id=user.id if user else None,
+        topic="single question practice",
+        difficulty="mixed",
+        status="practice",
+    )
+    db.add(exam)
+    db.flush()
+
+    for index, question in enumerate(questions, start=1):
+        db.add(ExamQuestion(exam_id=exam.id, question_id=question.id, order_number=index))
+
+    db.commit()
+    db.refresh(exam)
+
+    return GenerateExamResponse(
+        exam_id=exam.id,
+        topic=exam.topic,
+        difficulty=exam.difficulty,
+        questions=[question_to_out(question) for question in questions],
+    )
+
+
 @router.post("/finish-exam/{exam_id}", response_model=FeedbackReportOut)
 def finish_exam(exam_id: int, db: Session = Depends(get_db)) -> FeedbackReportOut:
     exam = (

@@ -1,8 +1,45 @@
 const API_HOST = window.location.hostname || "localhost";
 const API_BASE = `http://${API_HOST}:8000`;
+const MODEL_OPTIONS = [
+  { provider: "OpenAI", id: "gpt-5.5" },
+  { provider: "OpenAI", id: "gpt-5.4" },
+  { provider: "OpenAI", id: "gpt-5.4-mini" },
+  { provider: "OpenAI", id: "gpt-5.4-nano" },
+  { provider: "OpenAI", id: "gpt-4.1" },
+  { provider: "OpenAI", id: "gpt-4.1-mini" },
+  { provider: "DeepSeek", id: "deepseek-v4-flash" },
+  { provider: "DeepSeek", id: "deepseek-chat" },
+  { provider: "DeepSeek", id: "deepseek-reasoner" },
+  { provider: "Google Gemini", id: "gemini-3.1-pro" },
+  { provider: "Google Gemini", id: "gemini-3.1-flash" },
+  { provider: "Google Gemini", id: "gemini-2.5-pro" },
+  { provider: "Google Gemini", id: "gemini-2.5-flash" },
+  { provider: "Google Gemini", id: "gemini-2.5-flash-lite" },
+  { provider: "Z.ai GLM", id: "glm-5.2" },
+  { provider: "Z.ai GLM", id: "glm-5.1" },
+  { provider: "Z.ai GLM", id: "glm-5" },
+  { provider: "Z.ai GLM", id: "glm-4.6" },
+  { provider: "Z.ai GLM", id: "glm-4.5" },
+  { provider: "Anthropic Claude", id: "claude-opus-4.5" },
+  { provider: "Anthropic Claude", id: "claude-sonnet-4.5" },
+  { provider: "Qwen", id: "qwen3-max" },
+  { provider: "Qwen", id: "qwen3-coder" },
+  { provider: "Mistral", id: "mistral-large-latest" },
+  { provider: "Mistral", id: "codestral-latest" },
+  { provider: "Meta Llama", id: "llama-4" },
+  { provider: "Moonshot Kimi", id: "kimi-k2" },
+  { provider: "Other", id: "__other__" },
+];
 
 const state = {
   username: localStorage.getItem("pea_username") || "",
+  email: localStorage.getItem("pea_email") || "",
+  avatarInitial: localStorage.getItem("pea_avatar") || "T",
+  isDemo: localStorage.getItem("pea_is_demo") === "true",
+  editorTheme: localStorage.getItem("pea_editor_theme") || "dark",
+  accentColor: localStorage.getItem("pea_accent_color") || "blue",
+  apiKey: localStorage.getItem("pea_api_key") || "",
+  defaultModel: localStorage.getItem("pea_default_model") || "gpt-5.4-mini",
   topics: [],
   currentExam: null,
   currentQuestionIndex: 0,
@@ -18,19 +55,46 @@ const elements = {
   loginForm: document.querySelector("#loginForm"),
   usernameInput: document.querySelector("#usernameInput"),
   passwordInput: document.querySelector("#passwordInput"),
+  brandHomeButton: document.querySelector("#brandHomeButton"),
   userLabel: document.querySelector("#userLabel"),
+  accountButton: document.querySelector("#accountButton"),
+  accountQuickMenu: document.querySelector("#accountQuickMenu"),
+  accountDetailsOption: document.querySelector("#accountDetailsOption"),
+  quickSaveAccountOption: document.querySelector("#quickSaveAccountOption"),
+  logoutOption: document.querySelector("#logoutOption"),
+  accountAvatar: document.querySelector("#accountAvatar"),
+  accountName: document.querySelector("#accountName"),
+  accountEmail: document.querySelector("#accountEmail"),
+  accountAttempts: document.querySelector("#accountAttempts"),
+  accountLearningTime: document.querySelector("#accountLearningTime"),
+  practiceCalendar: document.querySelector("#practiceCalendar"),
+  avatarForm: document.querySelector("#avatarForm"),
+  avatarInput: document.querySelector("#avatarInput"),
+  saveAccountForm: document.querySelector("#saveAccountForm"),
+  saveEmailInput: document.querySelector("#saveEmailInput"),
+  savePasswordInput: document.querySelector("#savePasswordInput"),
   logoutButton: document.querySelector("#logoutButton"),
+  sidebar: document.querySelector("#sidebar"),
+  sidebarToggle: document.querySelector("#sidebarToggle"),
+  sidebarToggleText: document.querySelector("#sidebarToggleText"),
+  sidebarToggleArrow: document.querySelector("#sidebarToggleArrow"),
+  sidebarClose: document.querySelector("#sidebarClose"),
   tabs: document.querySelectorAll(".tab"),
   sections: document.querySelectorAll(".view-section"),
   topicCount: document.querySelector("#topicCount"),
   examForm: document.querySelector("#examForm"),
+  practiceForm: document.querySelector("#practiceForm"),
   aiForm: document.querySelector("#aiForm"),
   apiKeyInput: document.querySelector("#apiKeyInput"),
+  modelFilterInput: document.querySelector("#modelFilterInput"),
   modelSelect: document.querySelector("#modelSelect"),
+  customModelInput: document.querySelector("#customModelInput"),
   aiResultList: document.querySelector("#aiResultList"),
   timerDisplay: document.querySelector("#timerDisplay"),
   scoreDisplay: document.querySelector("#scoreDisplay"),
   examWorkspace: document.querySelector("#examWorkspace"),
+  editorLightButton: document.querySelector("#editorLightButton"),
+  editorDarkButton: document.querySelector("#editorDarkButton"),
   examTitle: document.querySelector("#examTitle"),
   questionList: document.querySelector("#questionList"),
   prevQuestionButton: document.querySelector("#prevQuestionButton"),
@@ -43,7 +107,20 @@ const elements = {
   refreshWrongButton: document.querySelector("#refreshWrongButton"),
   refreshHistoryButton: document.querySelector("#refreshHistoryButton"),
   homeStartButton: document.querySelector("#homeStartButton"),
-  homeWrongButton: document.querySelector("#homeWrongButton"),
+  backHomeButtons: document.querySelectorAll(".back-home-button"),
+  settingsButton: document.querySelector("#settingsButton"),
+  settingsPanel: document.querySelector("#settingsPanel"),
+  settingsCloseButton: document.querySelector("#settingsCloseButton"),
+  settingsSearchInput: document.querySelector("#settingsSearchInput"),
+  settingsNavButtons: document.querySelectorAll(".settings-nav"),
+  settingsViews: document.querySelectorAll(".settings-view"),
+  settingsEditorLightButton: document.querySelector("#settingsEditorLightButton"),
+  settingsEditorDarkButton: document.querySelector("#settingsEditorDarkButton"),
+  colorChoiceButtons: document.querySelectorAll(".color-choice"),
+  settingsApiKeyInput: document.querySelector("#settingsApiKeyInput"),
+  settingsModelInput: document.querySelector("#settingsModelInput"),
+  settingsModelList: document.querySelector("#settingsModelList"),
+  settingsSaveApiButton: document.querySelector("#settingsSaveApiButton"),
   toast: document.querySelector("#toast"),
 };
 
@@ -51,9 +128,15 @@ init();
 
 function init() {
   bindEvents();
+  renderModelOptions();
+  renderSettingsModelList();
+  applyEditorTheme();
+  applyAccentColor();
+  syncApiSettingsInputs();
   updateAuthView();
   if (state.username) {
     loadTopics();
+    loadAccountDetails();
   }
 }
 
@@ -68,43 +151,134 @@ function bindEvents() {
     }
     try {
       const result = await apiPost("/login", { username, password });
-      state.username = result.username;
-      localStorage.setItem("pea_username", result.username);
+      applyAccount(result);
       elements.passwordInput.value = "";
-      updateAuthView();
+      updateAuthView(true);
       loadTopics();
+      loadAccountDetails();
       showToast("Login successful.");
     } catch (error) {
       showToast(error.message);
     }
   });
 
+  elements.brandHomeButton.addEventListener("click", () => {
+    if (state.username) {
+      showSection("homeSection");
+    }
+  });
+
   elements.logoutButton.addEventListener("click", () => {
     localStorage.removeItem("pea_username");
+    localStorage.removeItem("pea_email");
+    localStorage.removeItem("pea_avatar");
+    localStorage.removeItem("pea_is_demo");
     state.username = "";
+    state.email = "";
+    state.avatarInitial = "T";
+    state.isDemo = false;
     state.currentExam = null;
     state.submissions.clear();
     stopTimer();
-    updateAuthView();
+    updateAuthView(true);
+  });
+
+  elements.accountButton.addEventListener("click", () => {
+    elements.accountQuickMenu.classList.toggle("hidden");
+  });
+
+  elements.accountDetailsOption.addEventListener("click", () => {
+    showSection("accountSection");
+    loadAccountDetails();
+  });
+
+  elements.quickSaveAccountOption.addEventListener("click", () => {
+    showSection("saveAccountSection");
+  });
+
+  elements.logoutOption.addEventListener("click", () => {
+    showSection("logoutSection");
+  });
+
+  elements.avatarForm.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    await updateAvatar();
+  });
+
+  elements.saveAccountForm.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    await saveToAccount();
   });
 
   elements.tabs.forEach((tab) => {
     tab.addEventListener("click", () => showSection(tab.dataset.view));
   });
 
+  elements.sidebarToggle.addEventListener("click", () => {
+    elements.sidebar.classList.toggle("open");
+    updateSidebarToggle();
+  });
+
+  elements.sidebarClose.addEventListener("click", () => {
+    elements.sidebar.classList.remove("open");
+    updateSidebarToggle();
+  });
+
   elements.homeStartButton.addEventListener("click", () => showSection("examSection"));
-  elements.homeWrongButton.addEventListener("click", () => {
-    showSection("wrongSection");
-    loadWrongQuestions();
+  elements.editorLightButton.addEventListener("click", () => setEditorTheme("light"));
+  elements.editorDarkButton.addEventListener("click", () => setEditorTheme("dark"));
+  elements.settingsEditorLightButton.addEventListener("click", () => setEditorTheme("light"));
+  elements.settingsEditorDarkButton.addEventListener("click", () => setEditorTheme("dark"));
+  elements.backHomeButtons.forEach((button) => {
+    button.addEventListener("click", () => showSection("homeSection"));
+  });
+
+  elements.settingsButton.addEventListener("click", () => {
+    elements.settingsPanel.classList.remove("hidden");
+    syncApiSettingsInputs();
+  });
+
+  elements.settingsCloseButton.addEventListener("click", () => {
+    elements.settingsPanel.classList.add("hidden");
+  });
+
+  elements.settingsNavButtons.forEach((button) => {
+    button.addEventListener("click", () => showSettingsView(button.dataset.settingsView));
+  });
+
+  elements.colorChoiceButtons.forEach((button) => {
+    button.addEventListener("click", () => setAccentColor(button.dataset.accent));
+  });
+
+  elements.settingsSaveApiButton.addEventListener("click", saveApiSettings);
+
+  elements.settingsSearchInput.addEventListener("input", () => {
+    const query = elements.settingsSearchInput.value.trim().toLowerCase();
+    const match = [...elements.settingsNavButtons].find((button) => button.textContent.toLowerCase().includes(query));
+    if (match) {
+      showSettingsView(match.dataset.settingsView);
+    }
   });
 
   elements.examForm.addEventListener("submit", async (event) => {
     event.preventDefault();
     await generateExam();
   });
+  elements.practiceForm.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    await generatePractice();
+  });
   elements.aiForm.addEventListener("submit", async (event) => {
     event.preventDefault();
     await generateAiQuestions();
+  });
+
+  elements.modelFilterInput.addEventListener("input", () => {
+    renderModelOptions(elements.modelFilterInput.value);
+  });
+
+  elements.modelSelect.addEventListener("change", () => {
+    updateCustomModelVisibility();
   });
 
   elements.finishExamButton.addEventListener("click", finishExam);
@@ -114,14 +288,253 @@ function bindEvents() {
   elements.refreshHistoryButton.addEventListener("click", loadHistory);
 }
 
-function updateAuthView() {
+function setEditorTheme(theme) {
+  state.editorTheme = theme;
+  localStorage.setItem("pea_editor_theme", theme);
+  applyEditorTheme();
+}
+
+function applyEditorTheme() {
+  const isLight = state.editorTheme === "light";
+  elements.examWorkspace.classList.toggle("editor-light", isLight);
+  elements.examWorkspace.classList.toggle("editor-dark", !isLight);
+  elements.editorLightButton.classList.toggle("active", isLight);
+  elements.editorDarkButton.classList.toggle("active", !isLight);
+  elements.settingsEditorLightButton.classList.toggle("active", isLight);
+  elements.settingsEditorDarkButton.classList.toggle("active", !isLight);
+}
+
+function setAccentColor(accent) {
+  state.accentColor = accent;
+  localStorage.setItem("pea_accent_color", accent);
+  applyAccentColor();
+}
+
+function applyAccentColor() {
+  document.body.dataset.accent = state.accentColor;
+  elements.colorChoiceButtons.forEach((button) => {
+    button.classList.toggle("active", button.dataset.accent === state.accentColor);
+  });
+}
+
+function showSettingsView(viewId) {
+  elements.settingsViews.forEach((view) => {
+    view.classList.toggle("hidden", view.id !== viewId);
+  });
+  elements.settingsNavButtons.forEach((button) => {
+    button.classList.toggle("active", button.dataset.settingsView === viewId);
+  });
+}
+
+function renderSettingsModelList() {
+  elements.settingsModelList.innerHTML = MODEL_OPTIONS
+    .filter((model) => model.id !== "__other__")
+    .map((model) => `<option value="${escapeHtml(model.id)}">${escapeHtml(model.provider)}</option>`)
+    .join("");
+}
+
+function syncApiSettingsInputs() {
+  elements.settingsApiKeyInput.value = state.apiKey;
+  elements.settingsModelInput.value = state.defaultModel;
+  if (!elements.apiKeyInput.value && state.apiKey) {
+    elements.apiKeyInput.value = state.apiKey;
+  }
+}
+
+function saveApiSettings() {
+  state.apiKey = elements.settingsApiKeyInput.value.trim();
+  state.defaultModel = elements.settingsModelInput.value.trim() || "gpt-5.4-mini";
+  localStorage.setItem("pea_api_key", state.apiKey);
+  localStorage.setItem("pea_default_model", state.defaultModel);
+  elements.apiKeyInput.value = state.apiKey;
+  setModelValue(state.defaultModel);
+  showToast("API settings saved in this browser.");
+}
+
+function renderModelOptions(filterText = "") {
+  const normalizedFilter = filterText.trim().toLowerCase();
+  const filteredModels = MODEL_OPTIONS.filter((model) => (
+    model.id.toLowerCase().includes(normalizedFilter)
+    || model.provider.toLowerCase().includes(normalizedFilter)
+  ));
+  const models = filteredModels.some((model) => model.id === "__other__")
+    ? filteredModels
+    : [...filteredModels, MODEL_OPTIONS[MODEL_OPTIONS.length - 1]];
+
+  elements.modelSelect.innerHTML = models
+    .map((model) => (
+      `<option value="${escapeHtml(model.id)}">${escapeHtml(model.provider)} - ${escapeHtml(model.id === "__other__" ? "Other / custom model" : model.id)}</option>`
+    ))
+    .join("");
+
+  if (!elements.modelSelect.value && models.length) {
+    elements.modelSelect.value = models[0].id;
+  }
+  setModelValue(state.defaultModel, false);
+  updateCustomModelVisibility();
+}
+
+function setModelValue(modelId, updateFilter = true) {
+  const options = [...elements.modelSelect.options];
+  const matchingOption = options.find((option) => option.value === modelId);
+  if (matchingOption) {
+    elements.modelSelect.value = modelId;
+    elements.customModelInput.value = "";
+    elements.customModelInput.classList.add("hidden");
+    if (updateFilter) {
+      elements.modelFilterInput.value = "";
+    }
+    return;
+  }
+  elements.modelSelect.value = "__other__";
+  elements.customModelInput.classList.remove("hidden");
+  elements.customModelInput.value = modelId;
+}
+
+function updateCustomModelVisibility() {
+  const isOther = elements.modelSelect.value === "__other__";
+  elements.customModelInput.classList.toggle("hidden", !isOther);
+}
+
+function applyAccount(account) {
+  state.username = account.username;
+  state.email = account.email || "";
+  state.avatarInitial = account.avatar_initial || account.username.slice(0, 1).toUpperCase();
+  state.isDemo = Boolean(account.is_demo);
+  localStorage.setItem("pea_username", state.username);
+  localStorage.setItem("pea_email", state.email);
+  localStorage.setItem("pea_avatar", state.avatarInitial);
+  localStorage.setItem("pea_is_demo", String(state.isDemo));
+}
+
+function updateAuthView(resetSection = false) {
   const isLoggedIn = Boolean(state.username);
+  document.body.classList.toggle("logged-out", !isLoggedIn);
+  document.body.classList.toggle("logged-in", isLoggedIn);
   elements.loginView.classList.toggle("hidden", isLoggedIn);
   elements.appView.classList.toggle("hidden", !isLoggedIn);
+  elements.accountButton.classList.toggle("hidden", !isLoggedIn);
   elements.logoutButton.classList.toggle("hidden", !isLoggedIn);
   elements.userLabel.textContent = isLoggedIn ? `Logged in as ${state.username}` : "Not logged in";
-  if (isLoggedIn) {
+  elements.accountButton.textContent = state.avatarInitial || "T";
+  elements.accountAvatar.textContent = state.avatarInitial || "T";
+  elements.accountName.textContent = state.username || "test";
+  elements.accountEmail.textContent = state.email ? `Email: ${state.email}` : "Email: unbound";
+  elements.saveAccountForm.classList.toggle("hidden", !state.isDemo);
+  elements.quickSaveAccountOption.classList.toggle("hidden", !state.isDemo);
+  elements.avatarInput.value = state.avatarInitial || "";
+  elements.sidebarToggle.classList.toggle("hidden", !isLoggedIn);
+  elements.sidebar.classList.toggle("hidden", !isLoggedIn);
+  elements.settingsButton.classList.toggle("hidden", !isLoggedIn);
+  updateSidebarToggle();
+  if (!isLoggedIn) {
+    elements.accountQuickMenu.classList.add("hidden");
+    elements.settingsPanel.classList.add("hidden");
+  }
+  if (isLoggedIn && resetSection) {
     showSection("homeSection");
+  }
+}
+
+async function loadAccountDetails() {
+  if (!state.username) {
+    return;
+  }
+  try {
+    const details = await apiGet(`/account/${encodeURIComponent(state.username)}`);
+    applyAccount(details);
+    updateAuthView();
+    elements.accountAttempts.textContent = details.attempt_count;
+    elements.accountLearningTime.textContent = `${details.learning_time_minutes} min`;
+    renderPracticeCalendar(details.activity_days || []);
+  } catch (error) {
+    showToast(error.message);
+  }
+}
+
+function renderPracticeCalendar(activityDays) {
+  if (!activityDays.length) {
+    elements.practiceCalendar.innerHTML = `<div class="empty-state">No practice records yet.</div>`;
+    return;
+  }
+
+  const activityMap = new Map(activityDays.map((day) => [day.date, day]));
+  const endDate = new Date();
+  const startDate = new Date(endDate);
+  startDate.setDate(endDate.getDate() - 34);
+  const cells = [];
+
+  for (let day = new Date(startDate); day <= endDate; day.setDate(day.getDate() + 1)) {
+    const dateKey = formatDateKey(day);
+    const activity = activityMap.get(dateKey);
+    const percent = activity ? Math.min(100, Math.max(0, activity.best_percent)) : 0;
+    const attempts = activity
+      ? activity.attempts.map((attempt) => attempt.score).join(", ")
+      : "No attempts";
+    const title = activity
+      ? `${dateKey}: best ${activity.best_score}; attempts: ${attempts}`
+      : `${dateKey}: no attempts`;
+    cells.push(`
+      <div class="calendar-day" title="${escapeHtml(title)}">
+        <span>${day.getDate()}</span>
+        <i style="--fill: ${percent}%">${activity ? escapeHtml(activity.best_score) : ""}</i>
+      </div>
+    `);
+  }
+
+  elements.practiceCalendar.innerHTML = cells.join("");
+}
+
+function formatDateKey(date) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
+async function updateAvatar() {
+  const avatarInitial = elements.avatarInput.value.trim();
+  if (!avatarInitial) {
+    showToast("Please enter an avatar letter.");
+    return;
+  }
+  try {
+    const details = await apiPost("/account/avatar", {
+      username: state.username,
+      avatar_initial: avatarInitial,
+    });
+    applyAccount(details);
+    updateAuthView();
+    showToast("Avatar updated.");
+  } catch (error) {
+    showToast(error.message);
+  }
+}
+
+async function saveToAccount() {
+  const email = elements.saveEmailInput.value.trim();
+  const password = elements.savePasswordInput.value;
+  if (!email || !password) {
+    showToast("Please enter email and password.");
+    return;
+  }
+  if (password.length < 8) {
+    showToast("Password must be at least 8 characters.");
+    return;
+  }
+  try {
+    const account = await apiPost("/account/save-to-account", {
+      source_username: state.username,
+      email,
+      password,
+    });
+    applyAccount(account);
+    updateAuthView();
+    loadAccountDetails();
+    elements.savePasswordInput.value = "";
+    showToast(account.message);
+  } catch (error) {
+    showToast(error.message);
   }
 }
 
@@ -138,6 +551,20 @@ function showSection(sectionId) {
   if (sectionId === "historySection") {
     loadHistory();
   }
+  if (sectionId === "accountSection") {
+    loadAccountDetails();
+  }
+  elements.sidebar.classList.remove("open");
+  elements.accountQuickMenu.classList.add("hidden");
+  updateSidebarToggle();
+}
+
+function updateSidebarToggle() {
+  const isOpen = elements.sidebar.classList.contains("open");
+  elements.sidebarToggle.classList.toggle("open", isOpen);
+  elements.sidebarToggleText.textContent = isOpen ? "Hidden" : "Menu";
+  elements.sidebarToggleArrow.textContent = isOpen ? "←" : "→";
+  elements.sidebarToggle.setAttribute("aria-label", isOpen ? "Hide menu" : "Open menu");
 }
 
 async function loadTopics() {
@@ -159,6 +586,7 @@ async function generateExam() {
       username: state.username,
     });
     state.currentExam = exam;
+    state.currentExam.mode = "exam";
     state.currentQuestionIndex = 0;
     state.submissions.clear();
     state.drafts.clear();
@@ -169,6 +597,32 @@ async function generateExam() {
     updateScore();
     startTimer(90);
     showToast("Timed exam started. You have 90 minutes.");
+  } catch (error) {
+    showToast(error.message);
+  }
+}
+
+async function generatePractice() {
+  try {
+    const exam = await apiPost("/generate-practice", {
+      topic: "__all__",
+      difficulty: "mixed",
+      number_of_questions: 8,
+      username: state.username,
+    });
+    state.currentExam = exam;
+    state.currentExam.mode = "practice";
+    state.currentQuestionIndex = 0;
+    state.submissions.clear();
+    state.drafts.clear();
+    stopTimer();
+    elements.finalFeedback.classList.add("hidden");
+    elements.examWorkspace.classList.remove("hidden");
+    elements.examTitle.textContent = `Practice bank #${exam.exam_id}`;
+    renderQuestions(exam.questions);
+    updateScore();
+    renderTimer();
+    showToast(`Single-question practice started with ${exam.questions.length} questions.`);
   } catch (error) {
     showToast(error.message);
   }
@@ -199,7 +653,8 @@ function renderCurrentQuestion() {
   }
 
   const question = questions[state.currentQuestionIndex];
-  elements.questionProgress.textContent = `Question ${state.currentQuestionIndex + 1} of ${questions.length}`;
+  const label = state.currentExam?.mode === "practice" ? "Practice question" : "Question";
+  elements.questionProgress.textContent = `${label} ${state.currentQuestionIndex + 1} of ${questions.length}`;
   elements.prevQuestionButton.disabled = state.currentQuestionIndex === 0;
   elements.nextQuestionButton.disabled = state.currentQuestionIndex === questions.length - 1;
   elements.questionList.innerHTML = questionTemplate(question, state.currentQuestionIndex);
@@ -374,6 +829,11 @@ function stopTimer() {
 }
 
 function renderTimer() {
+  if (state.currentExam?.mode === "practice") {
+    elements.timerDisplay.textContent = "Practice";
+    elements.timerDisplay.classList.remove("warning");
+    return;
+  }
   if (!state.examEndsAt) {
     elements.timerDisplay.textContent = "90:00";
     elements.timerDisplay.classList.remove("warning");
@@ -389,7 +849,9 @@ function renderTimer() {
 function updateScore(forcedSolved, forcedTotal) {
   const total = forcedTotal || state.currentExam?.questions.length || 8;
   const solved = forcedSolved ?? [...state.submissions.values()].filter((submission) => submission.is_correct).length;
-  elements.scoreDisplay.textContent = solved === total ? "PASS" : `${solved}/${total}`;
+  elements.scoreDisplay.textContent = state.currentExam?.mode === "practice"
+    ? `${solved}/${total} solved`
+    : (solved === total ? "PASS" : `${solved}/${total}`);
 }
 
 async function loadWrongQuestions() {
@@ -458,10 +920,16 @@ function historyTemplate(item) {
 }
 
 async function generateAiQuestions() {
-  const apiKey = elements.apiKeyInput.value.trim();
-  const model = elements.modelSelect.value;
+  const apiKey = elements.apiKeyInput.value.trim() || state.apiKey;
+  const model = elements.modelSelect.value === "__other__"
+    ? elements.customModelInput.value.trim()
+    : elements.modelSelect.value;
   if (!apiKey) {
     showToast("Please enter an API key.");
+    return;
+  }
+  if (!model) {
+    showToast("Please choose a model or enter a custom model name.");
     return;
   }
 

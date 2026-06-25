@@ -648,4 +648,241 @@ def seed_original_questions() -> list[Question]:
                 "        return self.balance\n"
             ),
         ),
+        Question(
+            title="Library Book Class",
+            description=(
+                "Create a LibraryBook class. It should store a title and an available flag. "
+                "borrow() should return True and mark the book unavailable if it can be borrowed, otherwise return False. "
+                "return_book() should mark it available again and return True."
+            ),
+            topic="classes",
+            difficulty="easy",
+            function_signature="LibraryBook(title)",
+            starter_code=(
+                "class LibraryBook:\n"
+                "    def __init__(self, title):\n"
+                "        # write your code here\n"
+                "        pass\n"
+                "\n"
+                "    def borrow(self):\n"
+                "        pass\n"
+                "\n"
+                "    def return_book(self):\n"
+                "        pass\n"
+            ),
+            test_cases=[
+                {
+                    "kind": "class",
+                    "class_name": "LibraryBook",
+                    "input": {"title": "Python Basics", "actions": ["title", "available", "borrow", "available"]},
+                    "init": {"title": "Python Basics"},
+                    "steps": [
+                        {"attribute": "title"},
+                        {"attribute": "available"},
+                        {"method": "borrow", "args": []},
+                        {"attribute": "available"},
+                    ],
+                    "expected": ["Python Basics", True, True, False],
+                },
+                {
+                    "kind": "class",
+                    "class_name": "LibraryBook",
+                    "input": {"title": "Data", "actions": ["borrow", "borrow", "return_book", "available"]},
+                    "init": {"title": "Data"},
+                    "steps": [
+                        {"method": "borrow", "args": []},
+                        {"method": "borrow", "args": []},
+                        {"method": "return_book", "args": []},
+                        {"attribute": "available"},
+                    ],
+                    "expected": [True, False, True, True],
+                },
+                {
+                    "kind": "class",
+                    "class_name": "LibraryBook",
+                    "input": {"title": "Algorithms", "actions": ["return_book", "available"]},
+                    "init": {"title": "Algorithms"},
+                    "steps": [
+                        {"method": "return_book", "args": []},
+                        {"attribute": "available"},
+                    ],
+                    "expected": [True, True],
+                    "hidden": True,
+                },
+            ],
+            reference_solution=(
+                "class LibraryBook:\n"
+                "    def __init__(self, title):\n"
+                "        self.title = title\n"
+                "        self.available = True\n"
+                "\n"
+                "    def borrow(self):\n"
+                "        if not self.available:\n"
+                "            return False\n"
+                "        self.available = False\n"
+                "        return True\n"
+                "\n"
+                "    def return_book(self):\n"
+                "        self.available = True\n"
+                "        return True\n"
+            ),
+        ),
+        Question(
+            title="Recursive Nested Sum",
+            description="Write a recursive function that sums all integers inside a nested list. Lists can contain integers or more lists.",
+            topic="recursion",
+            difficulty="medium",
+            function_signature="nested_sum(values)",
+            starter_code="def nested_sum(values):\n    # write your code here\n    pass\n",
+            test_cases=[
+                {"input": {"values": []}, "expected": 0},
+                {"input": {"values": [1, [2, 3], 4]}, "expected": 10},
+                {"input": {"values": [[1, [2]], [3, [4, [5]]]]}, "expected": 15},
+                {"input": {"values": [10, [-2, [5, [-3]]]]}, "expected": 10, "hidden": True},
+            ],
+            reference_solution=(
+                "def nested_sum(values):\n"
+                "    total = 0\n"
+                "    for value in values:\n"
+                "        if isinstance(value, list):\n"
+                "            total += nested_sum(value)\n"
+                "        else:\n"
+                "            total += value\n"
+                "    return total\n"
+            ),
+        ),
+        Question(
+            title="Recursive Flatten",
+            description="Write a recursive function that flattens a nested list into a single list while preserving left-to-right order.",
+            topic="recursion",
+            difficulty="medium",
+            function_signature="flatten(values)",
+            starter_code="def flatten(values):\n    # write your code here\n    pass\n",
+            test_cases=[
+                {"input": {"values": []}, "expected": []},
+                {"input": {"values": [1, [2, 3], 4]}, "expected": [1, 2, 3, 4]},
+                {"input": {"values": [[1, [2]], [], [3, [4, [5]]]]}, "expected": [1, 2, 3, 4, 5]},
+                {"input": {"values": [["a", ["b"]], ["c"]]}, "expected": ["a", "b", "c"], "hidden": True},
+            ],
+            reference_solution=(
+                "def flatten(values):\n"
+                "    result = []\n"
+                "    for value in values:\n"
+                "        if isinstance(value, list):\n"
+                "            result.extend(flatten(value))\n"
+                "        else:\n"
+                "            result.append(value)\n"
+                "    return result\n"
+            ),
+        ),
+        Question(
+            title="Word Frequency File",
+            description=(
+                "Write a function that reads a text file and returns a dictionary mapping each lowercase word to its count. "
+                "Words are separated by whitespace and punctuation should be ignored."
+            ),
+            topic="file processing",
+            difficulty="medium",
+            function_signature="word_frequencies(filename)",
+            starter_code="def word_frequencies(filename):\n    # write your code here\n    pass\n",
+            test_cases=[
+                {
+                    "input": {"filename": "words.txt"},
+                    "files": {"words.txt": "Hello, hello world!\nPython world."},
+                    "expected": {"hello": 2, "world": 2, "python": 1},
+                },
+                {
+                    "input": {"filename": "words.txt"},
+                    "files": {"words.txt": "One fish, two fish; red fish blue fish."},
+                    "expected": {"one": 1, "fish": 4, "two": 1, "red": 1, "blue": 1},
+                },
+                {
+                    "input": {"filename": "words.txt"},
+                    "files": {"words.txt": "A a A... b?"},
+                    "expected": {"a": 3, "b": 1},
+                    "hidden": True,
+                },
+            ],
+            reference_solution=(
+                "import string\n"
+                "\n"
+                "def word_frequencies(filename):\n"
+                "    counts = {}\n"
+                "    translator = str.maketrans('', '', string.punctuation)\n"
+                "    with open(filename, encoding='utf-8') as file:\n"
+                "        for word in file.read().translate(translator).lower().split():\n"
+                "            counts[word] = counts.get(word, 0) + 1\n"
+                "    return counts\n"
+            ),
+        ),
+        Question(
+            title="Rotate Matrix Clockwise",
+            description="Write a function that returns a new matrix rotated 90 degrees clockwise. The input matrix is rectangular and nonempty.",
+            topic="matrices",
+            difficulty="medium",
+            function_signature="rotate_clockwise(matrix)",
+            starter_code="def rotate_clockwise(matrix):\n    # write your code here\n    pass\n",
+            test_cases=[
+                {"input": {"matrix": [[1]]}, "expected": [[1]]},
+                {"input": {"matrix": [[1, 2], [3, 4]]}, "expected": [[3, 1], [4, 2]]},
+                {"input": {"matrix": [[1, 2, 3], [4, 5, 6]]}, "expected": [[4, 1], [5, 2], [6, 3]]},
+                {"input": {"matrix": [[1, 2], [3, 4], [5, 6]]}, "expected": [[5, 3, 1], [6, 4, 2]], "hidden": True},
+            ],
+            reference_solution=(
+                "def rotate_clockwise(matrix):\n"
+                "    rows = len(matrix)\n"
+                "    columns = len(matrix[0])\n"
+                "    return [[matrix[row][column] for row in range(rows - 1, -1, -1)] for column in range(columns)]\n"
+            ),
+        ),
+        Question(
+            title="Merge Overlapping Intervals",
+            description="Write a function that receives a list of [start, end] intervals and returns overlapping intervals merged in ascending order.",
+            topic="lists",
+            difficulty="medium",
+            function_signature="merge_intervals(intervals)",
+            starter_code="def merge_intervals(intervals):\n    # write your code here\n    pass\n",
+            test_cases=[
+                {"input": {"intervals": []}, "expected": []},
+                {"input": {"intervals": [[1, 3], [2, 6], [8, 10]]}, "expected": [[1, 6], [8, 10]]},
+                {"input": {"intervals": [[5, 7], [1, 2], [2, 4]]}, "expected": [[1, 4], [5, 7]]},
+                {"input": {"intervals": [[1, 5], [2, 3], [6, 8], [8, 9]]}, "expected": [[1, 5], [6, 9]], "hidden": True},
+            ],
+            reference_solution=(
+                "def merge_intervals(intervals):\n"
+                "    if not intervals:\n"
+                "        return []\n"
+                "    intervals = sorted(intervals)\n"
+                "    merged = [intervals[0][:]]\n"
+                "    for start, end in intervals[1:]:\n"
+                "        if start <= merged[-1][1]:\n"
+                "            merged[-1][1] = max(merged[-1][1], end)\n"
+                "        else:\n"
+                "            merged.append([start, end])\n"
+                "    return merged\n"
+            ),
+        ),
+        Question(
+            title="Group Anagrams",
+            description="Write a function that groups anagrams together. Return groups as lists, with words sorted inside each group and groups sorted by their first word.",
+            topic="strings",
+            difficulty="medium",
+            function_signature="group_anagrams(words)",
+            starter_code="def group_anagrams(words):\n    # write your code here\n    pass\n",
+            test_cases=[
+                {"input": {"words": []}, "expected": []},
+                {"input": {"words": ["eat", "tea", "tan", "ate", "nat", "bat"]}, "expected": [["ate", "eat", "tea"], ["bat"], ["nat", "tan"]]},
+                {"input": {"words": ["abc", "bca", "cab", "dog"]}, "expected": [["abc", "bca", "cab"], ["dog"]]},
+                {"input": {"words": ["listen", "silent", "enlist", "google"]}, "expected": [["enlist", "listen", "silent"], ["google"]], "hidden": True},
+            ],
+            reference_solution=(
+                "def group_anagrams(words):\n"
+                "    groups = {}\n"
+                "    for word in words:\n"
+                "        key = ''.join(sorted(word))\n"
+                "        groups.setdefault(key, []).append(word)\n"
+                "    result = [sorted(group) for group in groups.values()]\n"
+                "    return sorted(result, key=lambda group: group[0])\n"
+            ),
+        ),
     ]

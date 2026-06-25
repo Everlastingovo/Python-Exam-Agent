@@ -8,81 +8,109 @@
   </head>
   <body>
     <header class="topbar">
-      <div>
-        <p class="eyebrow">Python Exam Agent</p>
-        <h1>Practice Python with automatic feedback</h1>
-      </div>
+      <button id="brandHomeButton" class="topbar-brand" type="button" aria-label="Go to home">
+        <img src="assets/app-logo.png" alt="Python Exam Agent logo">
+        <div>
+          <p class="eyebrow">Python Exam Agent</p>
+          <h1>Timed Python Practice</h1>
+        </div>
+      </button>
       <div class="user-panel">
         <span id="userLabel">Not logged in</span>
-        <button id="logoutButton" class="ghost hidden" type="button">Log out</button>
+        <button id="accountButton" class="avatar-button hidden" type="button" aria-label="Account details">T</button>
+        <div id="accountQuickMenu" class="account-quick-menu hidden">
+          <button id="accountDetailsOption" type="button">User Details</button>
+          <button id="quickSaveAccountOption" type="button">Save to another account</button>
+          <button id="logoutOption" type="button">Log out</button>
+        </div>
       </div>
     </header>
 
     <main>
       <section id="loginView" class="login-layout">
-        <div class="intro-panel">
-          <p class="eyebrow">Beginner friendly</p>
-          <h2>Learn by solving small coding questions.</h2>
-          <p>
-            This system generates Python practice exams, runs test cases on your
-            answers, explains mistakes, and saves your progress for review.
-          </p>
-        </div>
         <form id="loginForm" class="login-card">
-          <label for="usernameInput">Username</label>
-          <input id="usernameInput" name="username" type="text" placeholder="test" required>
+          <div class="login-brand">
+            <img src="assets/app-logo.png" alt="Python Exam Agent logo">
+            <div>
+              <p class="eyebrow">Python Exam Agent</p>
+              <h2>Sign in</h2>
+            </div>
+          </div>
+          <p class="login-copy">Start a timed 8-question Python practice exam, with AI feedback to help you improve step by step.</p>
+          <label for="usernameInput">Username or email</label>
+          <input id="usernameInput" name="username" type="text" placeholder="test or 694042546@qq.com" required>
           <label for="passwordInput">Password</label>
           <input id="passwordInput" name="password" type="password" placeholder="123456" required>
-          <p class="login-hint">Demo account: test / 123456</p>
+          <p class="login-hint">Demo: test / 123456<br>Cloud account: 694042546@qq.com / 12345678</p>
           <button type="submit">Log in</button>
         </form>
       </section>
 
       <section id="appView" class="hidden">
-        <nav class="tabs" aria-label="Main sections">
-          <button class="tab active" type="button" data-view="homeSection">Home</button>
-          <button class="tab" type="button" data-view="examSection">Start Exam</button>
-          <button class="tab" type="button" data-view="aiSection">AI Generator</button>
-          <button class="tab" type="button" data-view="wrongSection">Wrong Questions</button>
-          <button class="tab" type="button" data-view="historySection">History</button>
-        </nav>
+        <button id="sidebarToggle" class="drawer-handle" type="button" aria-label="Open menu">
+          <span id="sidebarToggleText">Menu</span>
+          <strong id="sidebarToggleArrow">→</strong>
+        </button>
+        <div class="app-shell">
+          <aside class="sidebar" id="sidebar">
+            <div class="sidebar-brand">
+              <div>
+                <strong>Menu</strong>
+                <span>Choose a workspace section</span>
+              </div>
+            </div>
+            <button id="sidebarClose" class="sidebar-toggle" type="button" aria-label="Close menu">Close ←</button>
+            <nav class="tabs" aria-label="Main sections">
+              <button class="tab active" type="button" data-view="homeSection">Home</button>
+              <button class="tab" type="button" data-view="descriptionSection">Description</button>
+              <button class="tab" type="button" data-view="aiSection">AI Generator</button>
+              <button class="tab" type="button" data-view="wrongSection">Wrong Questions</button>
+              <button class="tab" type="button" data-view="historySection">History</button>
+            </nav>
+          </aside>
 
-        <section id="homeSection" class="view-section">
-          <div class="hero">
-            <div>
-              <p class="eyebrow">System Description</p>
-              <h2>AI-assisted Python coding practice for beginners.</h2>
-              <p>
-                Complete an 8-question Python exam in 90 minutes, submit Python functions,
-                and get automatic pass or fail results with targeted feedback.
-                File reading, file writing, dictionary file, list, integer,
-                matrix, pattern, and number theory questions are supported.
-              </p>
-              <div class="hero-actions">
-                <button id="homeStartButton" type="button">Start Exam</button>
-                <button id="homeWrongButton" class="secondary" type="button">Review Wrong Questions</button>
+          <div class="content-area">
+            <section id="homeSection" class="view-section">
+              <div class="start-panel">
+                <img src="assets/app-logo.png" alt="Python Exam Agent logo">
+                <p class="eyebrow">Ready</p>
+                <h2>Start Test</h2>
+                <button id="homeStartButton" type="button">Start Test</button>
               </div>
-            </div>
-            <div class="stats-grid">
-              <div class="stat-card">
-                <strong>Exam Time</strong>
-                <span>90 minutes</span>
+            </section>
+
+            <section id="descriptionSection" class="view-section hidden">
+              <div class="hero">
+                <div>
+                  <p class="eyebrow">System Description</p>
+                  <h2>AI-assisted Python coding practice for beginners.</h2>
+                  <p>
+                    Complete an 8-question Python exam in 90 minutes, submit Python functions,
+                    and get automatic pass or fail results with targeted feedback.
+                    File reading, file writing, dictionary file, list, integer,
+                    matrix, pattern, class, recursion, and number theory questions are supported.
+                  </p>
+                </div>
+                <div class="stats-grid">
+                  <div class="stat-card stat-blue">
+                    <strong>Exam Time</strong>
+                    <span>90 minutes</span>
+                  </div>
+                  <div class="stat-card stat-green">
+                    <strong>Score</strong>
+                    <span>0/8 until submitted</span>
+                  </div>
+                  <div class="stat-card stat-yellow">
+                    <strong>Question Types</strong>
+                    <span id="topicCount">Loading</span>
+                  </div>
+                  <div class="stat-card stat-pink">
+                    <strong>Grading</strong>
+                    <span>Visible and hidden tests</span>
+                  </div>
+                </div>
               </div>
-              <div class="stat-card">
-                <strong>Score</strong>
-                <span>0/8 until submitted</span>
-              </div>
-              <div class="stat-card">
-                <strong>Question Types</strong>
-                <span id="topicCount">Loading</span>
-              </div>
-              <div class="stat-card">
-                <strong>Grading</strong>
-                <span>Visible and hidden tests</span>
-              </div>
-            </div>
-          </div>
-        </section>
+            </section>
 
         <section id="examSection" class="view-section hidden">
           <div class="section-header">
@@ -97,6 +125,7 @@
             <span class="status-pill">Time limit: 90 minutes</span>
           </div>
 
+          <div class="launch-grid">
           <form id="examForm" class="exam-launch-card">
             <div class="exam-launch-copy">
               <strong>Full exam package</strong>
@@ -104,6 +133,14 @@
             </div>
             <button type="submit">Start 8-Question Exam</button>
           </form>
+          <form id="practiceForm" class="exam-launch-card practice-launch-card">
+            <div class="exam-launch-copy">
+              <strong>Single-question practice</strong>
+              <span>Work through every question in the question bank one by one, with no timer pressure.</span>
+            </div>
+            <button type="submit">Practice All Questions</button>
+          </form>
+          </div>
 
           <div id="examWorkspace" class="workspace hidden">
             <div class="workspace-header">
@@ -112,6 +149,10 @@
                 <h3 id="examTitle">Exam</h3>
               </div>
               <div class="exam-status">
+                <div class="editor-theme-toggle" aria-label="Editor appearance">
+                  <button id="editorLightButton" class="secondary" type="button">Light</button>
+                  <button id="editorDarkButton" class="secondary active" type="button">Dark</button>
+                </div>
                 <span id="timerDisplay" class="timer-pill">90:00</span>
                 <span id="scoreDisplay" class="score-pill">0/8</span>
                 <button id="finishExamButton" class="secondary" type="button">Finish Exam</button>
@@ -130,12 +171,22 @@
         <section id="aiSection" class="view-section hidden">
           <div class="section-header">
             <div>
-              <p class="eyebrow">AI Question Generator</p>
+              <p class="eyebrow">AI Generator</p>
               <h2>Generate a new balanced exam draft</h2>
               <p class="section-copy">
-                Add an API key and choose a model version. The AI will use the existing question bank as style reference
-                and draft 8 new questions with mixed difficulty.
+                Use the API key saved in Settings, or enter one here for a one-time request.
+                The AI agent drafts new 8-question practice sets from the existing question bank style.
               </p>
+            </div>
+          </div>
+          <div class="info-strip">
+            <div>
+              <strong>With Settings API key</strong>
+              <span>Change your key anytime from the bottom-left Settings panel.</span>
+            </div>
+            <div>
+              <strong>Privacy</strong>
+              <span>The key is not stored. Local history and wrong questions stay in your local database.</span>
             </div>
           </div>
           <form id="aiForm" class="ai-card">
@@ -145,14 +196,14 @@
             </label>
             <label>
               Model version
-              <select id="modelSelect">
-                <option value="gpt-4.1-mini">gpt-4.1-mini</option>
-                <option value="gpt-4.1">gpt-4.1</option>
-                <option value="gpt-4o-mini">gpt-4o-mini</option>
-              </select>
+              <div class="model-picker">
+                <input id="modelFilterInput" type="text" placeholder="Filter models, e.g. deepseek, gemini, glm">
+                <select id="modelSelect" size="7"></select>
+                <input id="customModelInput" class="hidden" type="text" placeholder="Enter your model name, e.g. my-provider-model">
+              </div>
             </label>
             <button type="submit">Generate AI Questions</button>
-            <p class="form-note">The API key is sent only for this request and is not saved in the database.</p>
+            <p class="form-note">The API key is sent only for this request and is not written into SQLite or a cloud database.</p>
           </form>
           <div id="aiResultList" class="stack-list"></div>
         </section>
@@ -161,25 +212,166 @@
           <div class="section-header">
             <div>
               <p class="eyebrow">Review</p>
-              <h2>Wrong questions collection</h2>
+              <h2>Local wrong questions collection</h2>
+              <p class="section-copy">Incorrect submissions are organized from your local database for review and retry.</p>
             </div>
             <button id="refreshWrongButton" class="secondary" type="button">Refresh</button>
           </div>
           <div id="wrongList" class="stack-list"></div>
         </section>
 
+        <section id="accountSection" class="view-section hidden">
+          <div class="account-page">
+            <button class="back-home-button secondary" type="button" data-view="homeSection">← Back to Home</button>
+            <div class="account-profile">
+              <span id="accountAvatar" class="account-avatar large">T</span>
+              <div>
+                <p class="eyebrow">Account Details</p>
+                <h2 id="accountName">test</h2>
+                <p id="accountEmail" class="section-copy">Email: unbound</p>
+              </div>
+            </div>
+            <div class="account-stats">
+              <div>
+                <strong id="accountAttempts">0</strong>
+                <span>Attempts to try</span>
+              </div>
+              <div>
+                <strong id="accountLearningTime">0 min</strong>
+                <span>Learning time</span>
+              </div>
+            </div>
+            <div class="practice-calendar-panel">
+              <div>
+                <p class="eyebrow">Practice Calendar</p>
+                <h3>Daily best score</h3>
+                <p class="section-copy">A full circle means 8/8. Partial circles fill by the best score of that day.</p>
+              </div>
+              <div id="practiceCalendar" class="practice-calendar"></div>
+            </div>
+            <form id="avatarForm" class="account-form">
+              <label>
+                Change avatar
+                <input id="avatarInput" type="text" maxlength="2" placeholder="T">
+              </label>
+              <button class="secondary" type="submit">Update avatar</button>
+            </form>
+          </div>
+        </section>
+
+        <section id="saveAccountSection" class="view-section hidden">
+          <div class="account-page">
+            <button class="back-home-button secondary" type="button" data-view="homeSection">← Back to Home</button>
+            <div>
+              <p class="eyebrow">Save to Another Account</p>
+              <h2>Bind this demo progress to a database account</h2>
+              <p class="section-copy">
+                This page is only shown for the test account. Enter an existing database email and password,
+                or use a new email to auto-register. Password must be at least 8 characters.
+              </p>
+            </div>
+            <form id="saveAccountForm" class="account-form">
+              <label>
+                Database email
+                <input id="saveEmailInput" type="email" placeholder="694042546@qq.com">
+              </label>
+              <label>
+                Password
+                <input id="savePasswordInput" type="password" minlength="8" placeholder="12345678">
+              </label>
+              <button type="submit">Save to another account</button>
+            </form>
+          </div>
+        </section>
+
+        <section id="logoutSection" class="view-section hidden">
+          <div class="account-page logout-page">
+            <button class="back-home-button secondary" type="button" data-view="homeSection">← Back to Home</button>
+            <div>
+              <p class="eyebrow">Log Out</p>
+              <h2>Ready to leave this account?</h2>
+              <p class="section-copy">Your local practice records stay saved in the database.</p>
+            </div>
+            <button id="logoutButton" type="button">Log out</button>
+          </div>
+        </section>
+
         <section id="historySection" class="view-section hidden">
           <div class="section-header">
             <div>
               <p class="eyebrow">Progress</p>
-              <h2>Exam history</h2>
+              <h2>Local attempt history</h2>
+              <p class="section-copy">Track exam attempts, submission counts, and scores saved on this device.</p>
             </div>
             <button id="refreshHistoryButton" class="secondary" type="button">Refresh</button>
           </div>
           <div id="historyList" class="stack-list"></div>
         </section>
+          </div>
+        </div>
       </section>
     </main>
+
+    <button id="settingsButton" class="settings-button hidden" type="button">Settings</button>
+
+    <section id="settingsPanel" class="settings-panel hidden" aria-label="Settings">
+      <aside class="settings-sidebar">
+        <button id="settingsCloseButton" class="settings-back" type="button">← Back to app</button>
+        <input id="settingsSearchInput" class="settings-search" type="text" placeholder="Search settings...">
+        <p class="settings-group-label">Personal</p>
+        <button class="settings-nav active" type="button" data-settings-view="settingsGeneral">General</button>
+        <button class="settings-nav" type="button" data-settings-view="settingsAppearance">Appearance</button>
+        <button class="settings-nav" type="button" data-settings-view="settingsApi">API Key</button>
+      </aside>
+      <div class="settings-content">
+        <section id="settingsGeneral" class="settings-view">
+          <h2>General</h2>
+          <div class="settings-card">
+            <div>
+              <strong>Editor mode</strong>
+              <span>Choose the coding area appearance during exams and practice.</span>
+            </div>
+            <div class="settings-choice-row">
+              <button id="settingsEditorLightButton" class="secondary" type="button">Light</button>
+              <button id="settingsEditorDarkButton" class="secondary" type="button">Dark</button>
+            </div>
+          </div>
+        </section>
+
+        <section id="settingsAppearance" class="settings-view hidden">
+          <h2>Appearance</h2>
+          <div class="settings-card">
+            <div>
+              <strong>Theme color</strong>
+              <span>Pick a simple accent color for buttons, menu dots, and highlights.</span>
+            </div>
+            <div class="color-choice-row">
+              <button class="color-choice blue" type="button" data-accent="blue">Blue</button>
+              <button class="color-choice teal" type="button" data-accent="teal">Teal</button>
+              <button class="color-choice slate" type="button" data-accent="slate">Slate</button>
+              <button class="color-choice indigo" type="button" data-accent="indigo">Indigo</button>
+            </div>
+          </div>
+        </section>
+
+        <section id="settingsApi" class="settings-view hidden">
+          <h2>API Key</h2>
+          <div class="settings-card">
+            <label>
+              API key
+              <input id="settingsApiKeyInput" type="password" placeholder="sk-..." autocomplete="off">
+            </label>
+            <label>
+              Default model
+              <input id="settingsModelInput" type="text" list="settingsModelList" placeholder="gpt-5.4-mini">
+              <datalist id="settingsModelList"></datalist>
+            </label>
+            <p class="form-note">Saved only in this browser. It is not written into SQLite or any cloud database.</p>
+            <button id="settingsSaveApiButton" type="button">Save API Settings</button>
+          </div>
+        </section>
+      </div>
+    </section>
 
     <div id="toast" class="toast hidden"></div>
     <script src="app.js"></script>

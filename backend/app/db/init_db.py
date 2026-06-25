@@ -21,10 +21,20 @@ def ensure_user_schema() -> None:
     if "password_hash" not in column_names:
         with engine.begin() as connection:
             connection.execute(text("ALTER TABLE users ADD COLUMN password_hash VARCHAR(256) DEFAULT ''"))
+    if "email" not in column_names:
+        with engine.begin() as connection:
+            connection.execute(text("ALTER TABLE users ADD COLUMN email VARCHAR(120)"))
+    if "avatar_initial" not in column_names:
+        with engine.begin() as connection:
+            connection.execute(text("ALTER TABLE users ADD COLUMN avatar_initial VARCHAR(2) DEFAULT ''"))
+    if "is_demo" not in column_names:
+        with engine.begin() as connection:
+            connection.execute(text("ALTER TABLE users ADD COLUMN is_demo BOOLEAN DEFAULT 0"))
 
 
 def seed_db(db: Session) -> None:
     seed_test_user(db)
+    seed_cloud_user(db)
     for seeded_question in seed_original_questions():
         existing_question = db.query(Question).filter(Question.title == seeded_question.title).first()
         if not existing_question:
@@ -45,7 +55,32 @@ def seed_test_user(db: Session) -> None:
     test_user = db.query(User).filter(User.username == "test").first()
     password_hash = hash_password("123456", "python_exam_agent_test_user")
     if not test_user:
-        db.add(User(username="test", password_hash=password_hash))
+        db.add(User(username="test", password_hash=password_hash, avatar_initial="T", is_demo=True))
         return
 
     test_user.password_hash = password_hash
+    test_user.email = None
+    test_user.avatar_initial = "T"
+    test_user.is_demo = True
+
+
+def seed_cloud_user(db: Session) -> None:
+    email = "694042546@qq.com"
+    user = db.query(User).filter((User.username == email) | (User.email == email)).first()
+    password_hash = hash_password("12345678", "python_exam_agent_cloud_user")
+    if not user:
+        db.add(
+            User(
+                username=email,
+                email=email,
+                password_hash=password_hash,
+                avatar_initial="6",
+                is_demo=False,
+            )
+        )
+        return
+
+    user.email = email
+    user.password_hash = password_hash
+    user.avatar_initial = user.avatar_initial or "6"
+    user.is_demo = False
