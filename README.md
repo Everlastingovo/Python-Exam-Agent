@@ -10,6 +10,8 @@ This repository currently contains the Phase 1 backend architecture:
 - exam generation API
 - answer submission API
 - automatic test-case execution
+- 90-minute 8-question exam UI
+- visible and hidden backend edge tests
 - basic mistake feedback
 - exam history and final feedback report endpoints
 
@@ -31,13 +33,17 @@ Python-Exam-Agent/
 |   |   |-- services/
 |   |   `-- utils/
 |   `-- requirements.txt
+|-- frontend/
+|   |-- index.html
+|   |-- styles.css
+|   `-- app.js
 |-- README.md
 `-- .gitignore
 ```
 
 ## Run Locally
 
-From the project root:
+Start the backend from the project root:
 
 ```bash
 cd backend
@@ -54,6 +60,26 @@ Recommended Python version:
 Python 3.12
 ```
 
+Start the frontend in a second terminal from the project root:
+
+```bash
+cd frontend
+python -m http.server 5173
+```
+
+Open the frontend:
+
+```text
+http://127.0.0.1:5173
+```
+
+Demo login account:
+
+```text
+Username: test
+Password: 123456
+```
+
 Open the API docs:
 
 ```text
@@ -63,12 +89,14 @@ http://127.0.0.1:8000/docs
 ## Main API Endpoints
 
 ```text
+POST /login
 GET  /topics
 POST /generate-exam
 POST /submit-answer
 POST /finish-exam/{exam_id}
 GET  /exam/{exam_id}
 GET  /history
+GET  /wrong-questions
 ```
 
 ## Example Request
@@ -77,9 +105,9 @@ Generate an exam:
 
 ```json
 {
-  "topic": "number theory",
+  "topic": "__all__",
   "difficulty": "standard",
-  "number_of_questions": 3,
+  "number_of_questions": 8,
   "username": "demo"
 }
 ```
@@ -120,6 +148,24 @@ creates those files in an isolated temporary folder before executing the answer.
     "data.csv": "name,score\nAda,10\nBo,7\n"
   },
   "expected": ["Ada"]
+}
+```
+
+### Hidden Backend Tests
+
+Add `"hidden": true` to a test case to make it count toward grading without
+showing the exact input, expected output, or actual output in the frontend.
+
+```json
+{
+  "input": {
+    "n": 1024
+  },
+  "expected": {
+    "binary": "10000000000",
+    "ones": 1
+  },
+  "hidden": true
 }
 ```
 

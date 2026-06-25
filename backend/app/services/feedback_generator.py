@@ -29,7 +29,8 @@ def build_exam_feedback(exam: Exam) -> dict:
     else:
         suggestions.append("Try the next difficulty level or practise a different topic.")
 
-    summary = f"You solved {solved} out of {total} question(s), with a score of {score}%."
+    result_label = "PASS" if total and solved == total else "NOT PASS"
+    summary = f"{result_label}: You solved {solved} out of {total} question(s), with a score of {score}%."
     return {
         "exam_id": exam.id,
         "total_questions": total,

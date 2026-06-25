@@ -12,6 +12,7 @@ from app.schemas.exam import (
     GenerateExamResponse,
     HistoryItemOut,
     QuestionOut,
+    WrongQuestionOut,
 )
 from app.services.feedback_generator import build_exam_feedback
 
@@ -20,20 +21,30 @@ router = APIRouter(tags=["exams"])
 
 @router.post("/generate-exam", response_model=GenerateExamResponse)
 def generate_exam(payload: GenerateExamRequest, db: Session = Depends(get_db)) -> GenerateExamResponse:
-    questions = (
-        db.query(Question)
-        .filter(Question.topic == payload.topic, Question.difficulty == payload.difficulty)
-        .order_by(Question.id)
-        .limit(payload.number_of_questions)
-        .all()
-    )
+    if payload.topic == "__all__":
+        questions = (
+            db.query(Question)
+            .filter(Question.difficulty == payload.difficulty)
+            .order_by(Question.id)
+            .limit(8)
+            .all()
+        )
+    else:
+        questions = (
+            db.query(Question)
+            .filter(Question.topic == payload.topic, Question.difficulty == payload.difficulty)
+            .order_by(Question.id)
+            .limit(payload.number_of_questions)
+            .all()
+        )
 
-    if len(questions) < payload.number_of_questions:
+    target_count = 8 if payload.topic == "__all__" else payload.number_of_questions
+    if len(questions) < target_count:
         fallback_questions = (
             db.query(Question)
             .filter(Question.difficulty == payload.difficulty)
             .order_by(Question.id)
-            .limit(payload.number_of_questions)
+            .limit(target_count)
             .all()
         )
         questions = fallback_questions
@@ -51,7 +62,7 @@ def generate_exam(payload: GenerateExamRequest, db: Session = Depends(get_db)) -
 
     exam = Exam(
         user_id=user.id if user else None,
-        topic=payload.topic,
+        topic="full exam" if payload.topic == "__all__" else payload.topic,
         difficulty=payload.difficulty,
     )
     db.add(exam)
@@ -145,7 +156,43 @@ def get_history(db: Session = Depends(get_db)) -> list[HistoryItemOut]:
                 status=exam.status,
                 created_at=exam.created_at,
                 solved_questions=len(solved_question_ids),
+                total_questions=len(exam.questions),
                 total_submissions=len(exam.submissions),
             )
         )
     return items
+
+
+@router.get("/wrong-questions", response_model=list[WrongQuestionOut])
+def get_wrong_questions(username: str | None = None, db: Session = Depends(get_db)) -> list[WrongQuestionOut]:
+    query = (
+        db.query(Submission)
+        .join(Submission.question)
+        .join(Submission.exam)
+        .filter(Submission.is_correct.is_(False))
+        .order_by(Submission.created_at.desc())
+        .limit(50)
+    )
+
+    if username:
+        query = query.join(Exam.user).filter(User.username == username)
+
+    submissions = query.all()
+    return [
+        WrongQuestionOut(
+            submission_id=submission.id,
+            exam_id=submission.exam_id,
+            question_id=submission.question_id,
+            title=submission.question.title,
+            topic=submission.question.topic,
+            difficulty=submission.question.difficulty,
+            description=submission.question.description,
+            function_signature=submission.question.function_signature,
+            starter_code=submission.question.starter_code,
+            user_code=submission.user_code,
+            feedback=submission.feedback,
+            error_message=submission.error_message,
+            created_at=submission.created_at,
+        )
+        for submission in submissions
+    ]

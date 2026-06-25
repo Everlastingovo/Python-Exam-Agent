@@ -1,0 +1,152 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Python Exam Agent</title>
+    <link rel="stylesheet" href="styles.css">
+  </head>
+  <body>
+    <header class="topbar">
+      <div>
+        <p class="eyebrow">Python Exam Agent</p>
+        <h1>Practice Python with automatic feedback</h1>
+      </div>
+      <div class="user-panel">
+        <span id="userLabel">Not logged in</span>
+        <button id="logoutButton" class="ghost hidden" type="button">Log out</button>
+      </div>
+    </header>
+
+    <main>
+      <section id="loginView" class="login-layout">
+        <div class="intro-panel">
+          <p class="eyebrow">Beginner friendly</p>
+          <h2>Learn by solving small coding questions.</h2>
+          <p>
+            This system generates Python practice exams, runs test cases on your
+            answers, explains mistakes, and saves your progress for review.
+          </p>
+        </div>
+        <form id="loginForm" class="login-card">
+          <label for="usernameInput">Username</label>
+          <input id="usernameInput" name="username" type="text" placeholder="test" required>
+          <label for="passwordInput">Password</label>
+          <input id="passwordInput" name="password" type="password" placeholder="123456" required>
+          <button type="submit">Log in</button>
+        </form>
+      </section>
+
+      <section id="appView" class="hidden">
+        <nav class="tabs" aria-label="Main sections">
+          <button class="tab active" type="button" data-view="homeSection">Home</button>
+          <button class="tab" type="button" data-view="examSection">Start Exam</button>
+          <button class="tab" type="button" data-view="wrongSection">Wrong Questions</button>
+          <button class="tab" type="button" data-view="historySection">History</button>
+        </nav>
+
+        <section id="homeSection" class="view-section">
+          <div class="hero">
+            <div>
+              <p class="eyebrow">System Description</p>
+              <h2>AI-assisted Python coding practice for beginners.</h2>
+              <p>
+                Complete an 8-question Python exam in 90 minutes, submit Python functions,
+                and get automatic pass or fail results with targeted feedback.
+                File reading, file writing, dictionary file, list, integer,
+                matrix, pattern, and number theory questions are supported.
+              </p>
+              <div class="hero-actions">
+                <button id="homeStartButton" type="button">Start Exam</button>
+                <button id="homeWrongButton" class="secondary" type="button">Review Wrong Questions</button>
+              </div>
+            </div>
+            <div class="stats-grid">
+              <div class="stat-card">
+                <strong>Exam Time</strong>
+                <span>90 minutes</span>
+              </div>
+              <div class="stat-card">
+                <strong>Score</strong>
+                <span>0/8 until submitted</span>
+              </div>
+              <div class="stat-card">
+                <strong>Topics</strong>
+                <span id="topicCount">Loading</span>
+              </div>
+              <div class="stat-card">
+                <strong>Grading</strong>
+                <span>Visible and hidden tests</span>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section id="examSection" class="view-section hidden">
+          <div class="section-header">
+            <div>
+              <p class="eyebrow">Exam Setup</p>
+              <h2>Start the 8-question exam</h2>
+            </div>
+            <span class="status-pill">Time limit: 90 minutes</span>
+          </div>
+
+          <form id="examForm" class="setup-form">
+            <label>
+              Mode
+              <select id="topicSelect" required></select>
+            </label>
+            <label>
+              Questions
+              <select id="questionCountSelect">
+                <option value="8">8</option>
+              </select>
+            </label>
+            <button type="submit">Start Timed Exam</button>
+          </form>
+
+          <div id="examWorkspace" class="workspace hidden">
+            <div class="workspace-header">
+              <div>
+                <p class="eyebrow">Current Exam</p>
+                <h3 id="examTitle">Exam</h3>
+              </div>
+              <div class="exam-status">
+                <span id="timerDisplay" class="timer-pill">90:00</span>
+                <span id="scoreDisplay" class="score-pill">0/8</span>
+                <button id="finishExamButton" class="secondary" type="button">Finish Exam</button>
+              </div>
+            </div>
+            <div id="questionList" class="question-list"></div>
+            <div id="finalFeedback" class="feedback-panel hidden"></div>
+          </div>
+        </section>
+
+        <section id="wrongSection" class="view-section hidden">
+          <div class="section-header">
+            <div>
+              <p class="eyebrow">Review</p>
+              <h2>Wrong questions collection</h2>
+            </div>
+            <button id="refreshWrongButton" class="secondary" type="button">Refresh</button>
+          </div>
+          <div id="wrongList" class="stack-list"></div>
+        </section>
+
+        <section id="historySection" class="view-section hidden">
+          <div class="section-header">
+            <div>
+              <p class="eyebrow">Progress</p>
+              <h2>Exam history</h2>
+            </div>
+            <button id="refreshHistoryButton" class="secondary" type="button">Refresh</button>
+          </div>
+          <div id="historyList" class="stack-list"></div>
+        </section>
+      </section>
+    </main>
+
+    <div id="toast" class="toast hidden"></div>
+    <script src="app.js"></script>
+  </body>
+</html>

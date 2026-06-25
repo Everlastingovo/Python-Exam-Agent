@@ -5,7 +5,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.db.init_db import init_db, seed_db
 from app.db.session import SessionLocal
-from app.routers import exams, submissions, topics
+from app.routers import auth, exams, submissions, topics
 
 
 @asynccontextmanager
@@ -35,6 +35,7 @@ app.add_middleware(
 )
 
 app.include_router(topics.router)
+app.include_router(auth.router)
 app.include_router(exams.router)
 app.include_router(submissions.router)
 

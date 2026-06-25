@@ -31,6 +31,11 @@ def seed_original_questions() -> list[Question]:
                     "input": {"values": [3, 8, 2, 5, 7, 1, 0, 7, 4, 8, 3, 3, 7, 8, 8]},
                     "expected": [[3, 8], [2, 5, 7], [1], [0, 7], [4, 8], [3, 7, 8]],
                 },
+                {
+                    "input": {"values": [1, 1, 2, 2, 1, 3, 3, 4]},
+                    "expected": [[1, 2], [1, 3, 4]],
+                    "hidden": True,
+                },
             ],
             reference_solution=(
                 "def increasing_runs(values):\n"
@@ -58,6 +63,7 @@ def seed_original_questions() -> list[Question]:
                 {"input": {"n": 1}, "expected": {"binary": "1", "ones": 1}},
                 {"input": {"n": 2314}, "expected": {"binary": "100100001010", "ones": 4}},
                 {"input": {"n": 9871}, "expected": {"binary": "10011010001111", "ones": 8}},
+                {"input": {"n": 1024}, "expected": {"binary": "10000000000", "ones": 1}, "hidden": True},
             ],
             reference_solution="def binary_bit_count(n):\n    binary = bin(n)[2:]\n    return {\"binary\": binary, \"ones\": binary.count(\"1\")}\n",
         ),
@@ -75,6 +81,7 @@ def seed_original_questions() -> list[Question]:
                 {"input": {"n": 2}, "expected": [[2, 1]]},
                 {"input": {"n": 100}, "expected": [[2, 2], [5, 2]]},
                 {"input": {"n": 45100}, "expected": [[2, 2], [5, 2], [11, 1], [41, 1]]},
+                {"input": {"n": 5432}, "expected": [[2, 3], [7, 1], [97, 1]], "hidden": True},
             ],
             reference_solution=(
                 "def prime_factors(n):\n"
@@ -104,6 +111,7 @@ def seed_original_questions() -> list[Question]:
                 {"input": {"a": 2, "b": 2}, "expected": 1},
                 {"input": {"a": 4, "b": 4}, "expected": 0},
                 {"input": {"a": 100, "b": 800}, "expected": 114},
+                {"input": {"a": 14, "b": 16}, "expected": 0, "hidden": True},
             ],
             reference_solution=(
                 "def count_primes_between(a, b):\n"
@@ -126,18 +134,20 @@ def seed_original_questions() -> list[Question]:
         Question(
             title="Maximum Monthly Inflation From CSV",
             description=(
-                "Write a function that receives a year and the name of a CSV file. The CSV file has Date and Inflation columns. "
-                "Return the maximum inflation for that year and the month names where it occurs."
+                "Write a function that receives a year, an input CSV filename, and an output filename. "
+                "The CSV file has Date and Inflation columns. Return the maximum inflation for that year and the month names where it occurs, "
+                "and write the same summary to the output file."
             ),
             topic="file processing",
             difficulty="standard",
-            function_signature="maximum_inflation(year, filename)",
-            starter_code="def maximum_inflation(year, filename):\n    # write your code here\n    pass\n",
+            function_signature="maximum_inflation(year, input_filename, output_filename)",
+            starter_code="def maximum_inflation(year, input_filename, output_filename):\n    # write your code here\n    pass\n",
             test_cases=[
                 {
                     "input": {
                         "year": 1922,
-                        "filename": "inflation.csv",
+                        "input_filename": "inflation.csv",
+                        "output_filename": "report.txt",
                     },
                     "files": {
                         "inflation.csv": (
@@ -149,11 +159,13 @@ def seed_original_questions() -> list[Question]:
                         )
                     },
                     "expected": {"maximum": 0.6, "months": ["Jul", "Oct"]},
+                    "expected_files": {"report.txt": "Maximum inflation: 0.6\nMonths: Jul, Oct\n"},
                 },
                 {
                     "input": {
                         "year": 2013,
-                        "filename": "inflation.csv",
+                        "input_filename": "inflation.csv",
+                        "output_filename": "report.txt",
                     },
                     "files": {
                         "inflation.csv": (
@@ -163,15 +175,34 @@ def seed_original_questions() -> list[Question]:
                         )
                     },
                     "expected": {"maximum": 0.82, "months": ["Feb"]},
+                    "expected_files": {"report.txt": "Maximum inflation: 0.82\nMonths: Feb\n"},
+                },
+                {
+                    "input": {
+                        "year": 1995,
+                        "input_filename": "inflation.csv",
+                        "output_filename": "report.txt",
+                    },
+                    "files": {
+                        "inflation.csv": (
+                            "Date,Inflation\n"
+                            "1995-01-01,0.4\n"
+                            "1995-02-01,0.4\n"
+                            "1995-03-01,0.2\n"
+                        )
+                    },
+                    "expected": {"maximum": 0.4, "months": ["Jan", "Feb"]},
+                    "expected_files": {"report.txt": "Maximum inflation: 0.4\nMonths: Jan, Feb\n"},
+                    "hidden": True,
                 },
             ],
             reference_solution=(
                 "import csv\n"
                 "\n"
-                "def maximum_inflation(year, filename):\n"
+                "def maximum_inflation(year, input_filename, output_filename):\n"
                 "    month_names = [\"Jan\", \"Feb\", \"Mar\", \"Apr\", \"May\", \"Jun\", \"Jul\", \"Aug\", \"Sep\", \"Oct\", \"Nov\", \"Dec\"]\n"
                 "    selected = []\n"
-                "    with open(filename, newline=\"\", encoding=\"utf-8\") as csv_file:\n"
+                "    with open(input_filename, newline=\"\", encoding=\"utf-8\") as csv_file:\n"
                 "        reader = csv.DictReader(csv_file)\n"
                 "        for row in reader:\n"
                 "            row_year, row_month, _ = row[\"Date\"].split(\"-\")\n"
@@ -179,6 +210,9 @@ def seed_original_questions() -> list[Question]:
                 "                selected.append((float(row[\"Inflation\"]), month_names[int(row_month) - 1]))\n"
                 "    maximum = max(value for value, _ in selected)\n"
                 "    months = [month for value, month in selected if value == maximum]\n"
+                "    with open(output_filename, \"w\", encoding=\"utf-8\") as output_file:\n"
+                "        output_file.write(f\"Maximum inflation: {maximum}\\n\")\n"
+                "        output_file.write(f\"Months: {', '.join(months)}\\n\")\n"
                 "    return {\"maximum\": maximum, \"months\": months}\n"
             ),
         ),
@@ -198,6 +232,11 @@ def seed_original_questions() -> list[Question]:
                 {
                     "input": {"square": [[49, 97, 53], [5, 33, 65], [62, 51, 38]]},
                     "expected": {"is_good": True, "duplicates": [], "ordered_square": [[5, 49, 62], [33, 51, 65], [38, 53, 97]]},
+                },
+                {
+                    "input": {"square": [[3, 3, 0], [2, 4, 3], [3, 2, 3]]},
+                    "expected": {"is_good": False, "duplicates": [2, 3], "ordered_square": None},
+                    "hidden": True,
                 },
             ],
             reference_solution=(
@@ -236,6 +275,7 @@ def seed_original_questions() -> list[Question]:
                 {"input": {"height": 1}, "expected": ["0"]},
                 {"input": {"height": 4}, "expected": ["   0", "  123", " 45678", "9012345"]},
                 {"input": {"height": 6}, "expected": ["     0", "    123", "   45678", "  9012345", " 678901234", "56789012345"]},
+                {"input": {"height": 2}, "expected": [" 0", "123"], "hidden": True},
             ],
             reference_solution=(
                 "def digit_pyramid(height):\n"
@@ -276,6 +316,12 @@ def seed_original_questions() -> list[Question]:
                     "files": {"dictionary.txt": "BAD\nFACE\nHIGH\n"},
                     "expected": [],
                 },
+                {
+                    "input": {"letters": "ABCD", "dictionary_filename": "dictionary.txt"},
+                    "files": {"dictionary.txt": "AB\nCD\nAC\nBD\nAA\n"},
+                    "expected": [["AB", "CD"], ["AC", "BD"]],
+                    "hidden": True,
+                },
             ],
             reference_solution=(
                 "def word_pairs_using_all_letters(letters, dictionary_filename):\n"
@@ -295,40 +341,6 @@ def seed_original_questions() -> list[Question]:
                 "            if first_set.isdisjoint(second_set) and first_set | second_set == target:\n"
                 "                pairs.add(tuple(sorted([first, second])))\n"
                 "    return [list(pair) for pair in sorted(pairs)]\n"
-            ),
-        ),
-        Question(
-            title="Write Word Lengths",
-            description=(
-                "Write a function that reads words from an input text file and writes one line per word to an output file. "
-                "Each output line should contain the word, a colon, a space, and the word length. Return the number of words written."
-            ),
-            topic="file processing",
-            difficulty="standard",
-            function_signature="write_word_lengths(input_filename, output_filename)",
-            starter_code="def write_word_lengths(input_filename, output_filename):\n    # write your code here\n    pass\n",
-            test_cases=[
-                {
-                    "input": {"input_filename": "words.txt", "output_filename": "lengths.txt"},
-                    "files": {"words.txt": "cat\npython\nAI\n"},
-                    "expected": 3,
-                    "expected_files": {"lengths.txt": "cat: 3\npython: 6\nAI: 2\n"},
-                },
-                {
-                    "input": {"input_filename": "words.txt", "output_filename": "lengths.txt"},
-                    "files": {"words.txt": "red\nblue\n"},
-                    "expected": 2,
-                    "expected_files": {"lengths.txt": "red: 3\nblue: 4\n"},
-                },
-            ],
-            reference_solution=(
-                "def write_word_lengths(input_filename, output_filename):\n"
-                "    with open(input_filename, encoding=\"utf-8\") as input_file:\n"
-                "        words = [line.strip() for line in input_file if line.strip()]\n"
-                "    with open(output_filename, \"w\", encoding=\"utf-8\") as output_file:\n"
-                "        for word in words:\n"
-                "            output_file.write(f\"{word}: {len(word)}\\n\")\n"
-                "    return len(words)\n"
             ),
         ),
     ]

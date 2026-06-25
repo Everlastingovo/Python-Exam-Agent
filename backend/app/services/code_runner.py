@@ -81,6 +81,7 @@ def _is_relative_to(path: Path, parent: Path) -> bool:
 
 
 def _run_single_test(temp_path: Path, runner_path: Path, test_case: dict) -> dict:
+    is_hidden = bool(test_case.get("hidden"))
     base_result = {
         "input": test_case["input"],
         "expected": test_case["expected"],
@@ -88,6 +89,7 @@ def _run_single_test(temp_path: Path, runner_path: Path, test_case: dict) -> dic
         "passed": False,
         "error": None,
         "file_results": [],
+        "hidden": is_hidden,
     }
 
     try:
@@ -101,28 +103,29 @@ def _run_single_test(temp_path: Path, runner_path: Path, test_case: dict) -> dic
             env=_safe_env(),
         )
     except subprocess.TimeoutExpired:
-        return {**base_result, "error": "Code execution timed out."}
+        return _hide_if_needed({**base_result, "error": "Code execution timed out."})
 
     if completed.returncode != 0:
-        return {**base_result, "error": completed.stderr.strip() or "Code execution failed."}
+        return _hide_if_needed({**base_result, "error": completed.stderr.strip() or "Code execution failed."})
 
     try:
         payload = json.loads(completed.stdout.strip().splitlines()[-1])
     except (json.JSONDecodeError, IndexError):
-        return {**base_result, "error": "Could not read the program output."}
+        return _hide_if_needed({**base_result, "error": "Could not read the program output."})
 
     if not payload["ok"]:
-        return {**base_result, "error": payload["error"]}
+        return _hide_if_needed({**base_result, "error": payload["error"]})
 
     actual = payload["actual"]
     file_results = _check_expected_files(temp_path, test_case)
     files_passed = all(result["passed"] for result in file_results)
-    return {
+    result = {
         **base_result,
         "actual": actual,
         "passed": actual == test_case["expected"] and files_passed,
         "file_results": file_results,
     }
+    return _hide_if_needed(result)
 
 
 def _safe_env() -> dict[str, str]:
@@ -170,3 +173,17 @@ def _check_expected_files(temp_path: Path, test_case: dict) -> list[dict]:
             }
         )
     return file_results
+
+
+def _hide_if_needed(result: dict) -> dict:
+    if not result.get("hidden"):
+        return result
+
+    return {
+        **result,
+        "input": {"case": "Hidden backend edge test"},
+        "expected": "Hidden",
+        "actual": "Hidden" if result["passed"] else None,
+        "error": None if result["passed"] else "Hidden backend edge test failed.",
+        "file_results": [],
+    }

@@ -1,5 +1,18 @@
 How to use Python Exam Agent
 
+Demo login account
+
+Username:
+test
+
+Password:
+123456
+
+Recommended Python version:
+Python 3.12
+
+Windows setup
+
 1. Open a terminal in the project folder.
 
 Example:
@@ -11,9 +24,6 @@ Command:
 cd backend
 
 3. Check the Python version.
-
-Recommended:
-Python 3.12
 
 Command:
 python --version
@@ -28,12 +38,9 @@ python -m venv .venv
 Command:
 .venv\Scripts\activate
 
-6. Install dependencies.
+6. Install backend dependencies.
 
 Command:
-pip install -r requirements.txt
-
-Alternative command from the project root:
 pip install -r requirements.txt
 
 7. Start the backend server.
@@ -41,52 +48,125 @@ pip install -r requirements.txt
 Command:
 uvicorn app.main:app --reload
 
-8. Open the API documentation in your browser.
+8. Open a second terminal in the project folder.
+
+Example:
+~\Python-Exam-Agent
+
+9. Start the frontend server.
+
+Command:
+cd frontend
+python -m http.server 5173
+
+10. Open the frontend in your browser.
+
+URL:
+http://127.0.0.1:5173
+
+Mac setup
+
+1. Open Terminal in the project folder.
+
+Example:
+~/Python-Exam-Agent
+
+2. Enter the backend folder.
+
+Command:
+cd backend
+
+3. Check the Python version.
+
+Command:
+python3 --version
+
+4. Create a virtual environment.
+
+Command:
+python3 -m venv .venv
+
+5. Activate the virtual environment.
+
+Command:
+source .venv/bin/activate
+
+6. Install backend dependencies.
+
+Command:
+pip install -r requirements.txt
+
+7. Start the backend server.
+
+Command:
+uvicorn app.main:app --reload
+
+8. Open a second Terminal window in the project folder.
+
+Example:
+~/Python-Exam-Agent
+
+9. Start the frontend server.
+
+Command:
+cd frontend
+python3 -m http.server 5173
+
+10. Open the frontend in your browser.
+
+URL:
+http://127.0.0.1:5173
+
+API documentation
 
 URL:
 http://127.0.0.1:8000/docs
 
-9. Generate an exam.
+Login steps
 
-Use:
+1. Open the frontend.
+2. Enter username: test
+3. Enter password: 123456
+4. Click Log in.
+
+Exam flow
+
+1. Click Start Exam.
+2. Choose Full exam: all 8 questions.
+3. Click Start Timed Exam.
+4. Complete the exam within 90 minutes.
+5. Write code in the editor.
+6. Click Compile & Run Tests.
+7. Review visible test results and hidden backend edge test status.
+8. Click Finish Exam to see the final score.
+
+Main API endpoints
+
+POST /login
+GET  /topics
 POST /generate-exam
-
-Example request:
-{
-  "topic": "number theory",
-  "difficulty": "standard",
-  "number_of_questions": 3,
-  "username": "demo"
-}
-
-10. Submit an answer.
-
-Use:
 POST /submit-answer
-
-Example request:
-{
-  "exam_id": 1,
-  "question_id": 1,
-  "code": "def prime_factors(n):\n    return []\n"
-}
-
-11. Finish an exam and get feedback.
-
-Use:
 POST /finish-exam/{exam_id}
+GET  /history
+GET  /wrong-questions
 
-Example:
-POST /finish-exam/1
+Generate full exam example
 
-12. View exam history.
-
-Use:
-GET /history
+{
+  "topic": "__all__",
+  "difficulty": "standard",
+  "number_of_questions": 8,
+  "username": "test"
+}
 
 Notes:
+- The default test user is created automatically when the backend starts.
 - Questions are grouped by topic/type, not by easy, medium, or hard.
 - Use "standard" as the difficulty value.
+- Use "__all__" as the topic value to start the full 8-question exam.
+- The frontend exam timer is 90 minutes.
+- The final score is shown as 1/8, 2/8, and so on. A full score shows PASS.
+- Some backend edge test cases are hidden, so students cannot see every test input.
 - Current topics include lists, integers, number theory, file processing, matrices, patterns, and sets and words.
 - Some questions use temporary files such as CSV files or dictionary.txt during automatic grading.
 - The local SQLite database is created automatically when the backend starts.
