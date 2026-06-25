@@ -1,0 +1,81 @@
+How to use Python Exam Agent
+
+1. Open a terminal in the project folder.
+
+Example:
+D:\9900\1\Python-Exam-Agent
+
+2. Enter the backend folder.
+
+Command:
+cd backend
+
+3. Create a virtual environment.
+
+Command:
+python -m venv .venv
+
+4. Activate the virtual environment.
+
+Command:
+.venv\Scripts\activate
+
+5. Install dependencies.
+
+Command:
+pip install -r requirements.txt
+
+6. Start the backend server.
+
+Command:
+uvicorn app.main:app --reload
+
+7. Open the API documentation in your browser.
+
+URL:
+http://127.0.0.1:8000/docs
+
+8. Generate an exam.
+
+Use:
+POST /generate-exam
+
+Example request:
+{
+  "topic": "number theory",
+  "difficulty": "standard",
+  "number_of_questions": 3,
+  "username": "demo"
+}
+
+9. Submit an answer.
+
+Use:
+POST /submit-answer
+
+Example request:
+{
+  "exam_id": 1,
+  "question_id": 1,
+  "code": "def prime_factors(n):\n    return []\n"
+}
+
+10. Finish an exam and get feedback.
+
+Use:
+POST /finish-exam/{exam_id}
+
+Example:
+POST /finish-exam/1
+
+11. View exam history.
+
+Use:
+GET /history
+
+Notes:
+- Questions are grouped by topic/type, not by easy, medium, or hard.
+- Use "standard" as the difficulty value.
+- Current topics include lists, integers, number theory, file processing, matrices, patterns, and sets and words.
+- Some questions use temporary files such as CSV files or dictionary.txt during automatic grading.
+- The local SQLite database is created automatically when the backend starts.
