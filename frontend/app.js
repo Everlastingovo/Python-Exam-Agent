@@ -19,10 +19,8 @@ const elements = {
   logoutButton: document.querySelector("#logoutButton"),
   tabs: document.querySelectorAll(".tab"),
   sections: document.querySelectorAll(".view-section"),
-  topicSelect: document.querySelector("#topicSelect"),
   topicCount: document.querySelector("#topicCount"),
   examForm: document.querySelector("#examForm"),
-  questionCountSelect: document.querySelector("#questionCountSelect"),
   timerDisplay: document.querySelector("#timerDisplay"),
   scoreDisplay: document.querySelector("#scoreDisplay"),
   examWorkspace: document.querySelector("#examWorkspace"),
@@ -130,28 +128,18 @@ async function loadTopics() {
   try {
     const data = await apiGet("/topics");
     state.topics = data.topics || [];
-    elements.topicCount.textContent = `${Math.max(0, state.topics.length - 1)} topics`;
-    elements.topicSelect.innerHTML = state.topics
-      .map((topic) => `<option value="${escapeHtml(topic.value)}">${escapeHtml(topic.label)}</option>`)
-      .join("");
+    elements.topicCount.textContent = `${state.topics.length} available`;
   } catch (error) {
     showToast(error.message);
   }
 }
 
 async function generateExam() {
-  const topic = elements.topicSelect.value;
-  const count = Number(elements.questionCountSelect.value);
-  if (!topic) {
-    showToast("Please choose a topic.");
-    return;
-  }
-
   try {
     const exam = await apiPost("/generate-exam", {
-      topic,
-      difficulty: "standard",
-      number_of_questions: count,
+      topic: "__all__",
+      difficulty: "mixed",
+      number_of_questions: 8,
       username: state.username,
     });
     state.currentExam = exam;
@@ -183,6 +171,7 @@ function questionTemplate(question, index) {
         <div class="question-meta">
           <span>Question ${index + 1}</span>
           <span>${escapeHtml(question.topic)}</span>
+          <span class="difficulty-tag ${escapeHtml(question.difficulty)}">${escapeHtml(question.difficulty)}</span>
           <span>${escapeHtml(question.function_signature)}</span>
         </div>
         <h3>${escapeHtml(question.title)}</h3>

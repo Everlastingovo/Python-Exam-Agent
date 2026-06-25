@@ -33,6 +33,7 @@
           <input id="usernameInput" name="username" type="text" placeholder="test" required>
           <label for="passwordInput">Password</label>
           <input id="passwordInput" name="password" type="password" placeholder="123456" required>
+          <p class="login-hint">Demo account: test / 123456</p>
           <button type="submit">Log in</button>
         </form>
       </section>
@@ -71,7 +72,7 @@
                 <span>0/8 until submitted</span>
               </div>
               <div class="stat-card">
-                <strong>Topics</strong>
+                <strong>Question Types</strong>
                 <span id="topicCount">Loading</span>
               </div>
               <div class="stat-card">
@@ -85,24 +86,22 @@
         <section id="examSection" class="view-section hidden">
           <div class="section-header">
             <div>
-              <p class="eyebrow">Exam Setup</p>
+              <p class="eyebrow">Timed Exam</p>
               <h2>Start the 8-question exam</h2>
+              <p class="section-copy">
+                Each exam draws 8 balanced questions from the built-in question bank.
+                There is no topic or difficulty selection during the exam.
+              </p>
             </div>
             <span class="status-pill">Time limit: 90 minutes</span>
           </div>
 
-          <form id="examForm" class="setup-form">
-            <label>
-              Mode
-              <select id="topicSelect" required></select>
-            </label>
-            <label>
-              Questions
-              <select id="questionCountSelect">
-                <option value="8">8</option>
-              </select>
-            </label>
-            <button type="submit">Start Timed Exam</button>
+          <form id="examForm" class="exam-launch-card">
+            <div class="exam-launch-copy">
+              <strong>Full exam package</strong>
+              <span>8 questions, mixed difficulty, visible tests, hidden edge tests, and final score.</span>
+            </div>
+            <button type="submit">Start 8-Question Exam</button>
           </form>
 
           <div id="examWorkspace" class="workspace hidden">

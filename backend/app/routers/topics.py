@@ -7,4 +7,10 @@ router = APIRouter(tags=["topics"])
 
 @router.get("/topics")
 def list_topics() -> dict:
-    return {"topics": [{"value": "__all__", "label": "Full exam: all 8 questions"}] + [{"value": topic, "label": topic} for topic in SUPPORTED_TOPICS]}
+    return {
+        "topics": SUPPORTED_TOPICS,
+        "exam_size": 8,
+        "difficulty_distribution": {"easy": 3, "medium": 3, "hard": 2},
+        "max_questions_per_topic": 2,
+        "selection_enabled": False,
+    }

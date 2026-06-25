@@ -15,7 +15,7 @@ class QuestionOut(BaseModel):
 
 class GenerateExamRequest(BaseModel):
     topic: str = Field(..., min_length=1, examples=["__all__"])
-    difficulty: str = Field("standard", examples=["standard"])
+    difficulty: str = Field("mixed", examples=["mixed"])
     number_of_questions: int = Field(3, ge=1, le=8)
     username: str | None = Field(None, max_length=80)
 

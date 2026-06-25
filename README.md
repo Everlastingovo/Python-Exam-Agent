@@ -15,9 +15,12 @@ This repository currently contains the Phase 1 backend architecture:
 - basic mistake feedback
 - exam history and final feedback report endpoints
 
-The backend currently seeds sanitized Python practice questions. They are not
-split by easy, medium, or hard; they are grouped by topic/type and use the
-default difficulty value `standard`.
+The backend seeds sanitized Python practice questions from the repository into
+SQLite when the server starts. Each generated exam draws 8 questions from this
+built-in question bank. There is no topic or question-count selection in the
+exam UI.
+The exam distribution is 3 easy questions, 3 medium questions, and 2 hard
+questions. No topic/type appears more than 2 times.
 
 ## Project Structure
 
@@ -106,7 +109,7 @@ Generate an exam:
 ```json
 {
   "topic": "__all__",
-  "difficulty": "standard",
+  "difficulty": "mixed",
   "number_of_questions": 8,
   "username": "demo"
 }
@@ -130,9 +133,12 @@ Questions are currently seeded in:
 backend/app/services/question_generator.py
 ```
 
-When more questions are ready, remove all course, school, instructor, assignment,
-exam-source, and private-material information before adding them to this seed
-layer or a future admin import endpoint.
+These questions are committed to the repository, so another device can clone the
+GitHub project, start the backend, and draw exams from the same built-in
+question bank.
+When more questions are ready, remove all course, school, instructor,
+assignment, exam-source, and private-material information before adding them to
+this seed layer or a future admin import endpoint.
 
 ### File-Based Test Cases
 

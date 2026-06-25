@@ -132,13 +132,12 @@ Login steps
 Exam flow
 
 1. Click Start Exam.
-2. Choose Full exam: all 8 questions.
-3. Click Start Timed Exam.
-4. Complete the exam within 90 minutes.
-5. Write code in the editor.
-6. Click Compile & Run Tests.
-7. Review visible test results and hidden backend edge test status.
-8. Click Finish Exam to see the final score.
+2. Click Start 8-Question Exam.
+3. Complete the exam within 90 minutes.
+4. Write code in the editor.
+5. Click Compile & Run Tests.
+6. Review visible test results and hidden backend edge test status.
+7. Click Finish Exam to see the final score.
 
 Main API endpoints
 
@@ -154,15 +153,21 @@ Generate full exam example
 
 {
   "topic": "__all__",
-  "difficulty": "standard",
+  "difficulty": "mixed",
   "number_of_questions": 8,
   "username": "test"
 }
 
 Notes:
 - The default test user is created automatically when the backend starts.
-- Questions are grouped by topic/type, not by easy, medium, or hard.
-- Use "standard" as the difficulty value.
+- The built-in question bank is stored in backend/app/services/question_generator.py.
+- A new device can clone the GitHub repository, start the backend, and use the same question bank.
+- Each exam draws 8 questions from the built-in question bank.
+- Difficulty is stored for every question in the database.
+- Each exam contains 3 easy questions, 3 medium questions, and 2 hard questions.
+- At most 2 questions can share the same type/topic.
+- There is no topic or question-count selection in the frontend exam.
+- Use "mixed" as the difficulty value.
 - Use "__all__" as the topic value to start the full 8-question exam.
 - The frontend exam timer is 90 minutes.
 - The final score is shown as 1/8, 2/8, and so on. A full score shows PASS.

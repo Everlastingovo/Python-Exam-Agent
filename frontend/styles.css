@@ -20,7 +20,9 @@
 body {
   margin: 0;
   min-height: 100vh;
-  background: var(--bg);
+  background:
+    radial-gradient(circle at top left, rgba(31, 94, 255, 0.12), transparent 30%),
+    linear-gradient(180deg, #f7f9fd 0%, var(--bg) 45%, #eef3fb 100%);
   color: var(--text);
   font-family: Inter, Segoe UI, Arial, sans-serif;
 }
@@ -64,12 +66,16 @@ button:disabled {
 
 .topbar {
   align-items: center;
-  background: var(--panel);
+  backdrop-filter: blur(14px);
+  background: rgba(255, 255, 255, 0.88);
   border-bottom: 1px solid var(--line);
   display: flex;
   justify-content: space-between;
   gap: 24px;
   padding: 22px clamp(18px, 4vw, 56px);
+  position: sticky;
+  top: 0;
+  z-index: 5;
 }
 
 .topbar h1,
@@ -112,7 +118,7 @@ main {
 .intro-panel,
 .login-card,
 .hero,
-.setup-form,
+.exam-launch-card,
 .workspace,
 .feedback-panel,
 .question-card,
@@ -134,16 +140,31 @@ main {
 }
 
 .intro-panel p,
-.hero p {
+.hero p,
+.section-copy {
   color: var(--muted);
   font-size: 17px;
   line-height: 1.7;
+}
+
+.section-copy {
+  margin-bottom: 0;
+  max-width: 720px;
 }
 
 .login-card {
   align-self: start;
   display: grid;
   gap: 12px;
+}
+
+.login-hint {
+  background: var(--panel-soft);
+  border-radius: 8px;
+  color: var(--muted);
+  font-size: 14px;
+  margin-bottom: 2px;
+  padding: 10px 12px;
 }
 
 label {
@@ -238,6 +259,12 @@ textarea {
   display: grid;
   gap: 8px;
   padding: 16px;
+  transition: transform 160ms ease, box-shadow 160ms ease;
+}
+
+.stat-card:hover {
+  box-shadow: 0 10px 22px rgba(22, 32, 51, 0.08);
+  transform: translateY(-2px);
 }
 
 .stat-card span {
@@ -300,12 +327,29 @@ textarea {
   color: var(--danger);
 }
 
-.setup-form {
-  align-items: end;
+.exam-launch-card {
+  align-items: center;
+  background:
+    linear-gradient(135deg, rgba(31, 94, 255, 0.1), rgba(255, 255, 255, 0) 42%),
+    var(--panel);
+  display: flex;
+  gap: 18px;
+  justify-content: space-between;
+  padding: 22px 26px;
+}
+
+.exam-launch-copy {
   display: grid;
-  gap: 16px;
-  grid-template-columns: minmax(220px, 1fr) minmax(180px, 0.5fr) auto;
-  padding: 18px;
+  gap: 6px;
+}
+
+.exam-launch-copy strong {
+  font-size: 20px;
+}
+
+.exam-launch-copy span {
+  color: var(--muted);
+  line-height: 1.5;
 }
 
 .workspace {
@@ -338,6 +382,21 @@ textarea {
   background: var(--panel-soft);
   border-radius: 999px;
   padding: 6px 10px;
+}
+
+.question-meta .difficulty-tag.easy {
+  background: #e5f7ed;
+  color: var(--success);
+}
+
+.question-meta .difficulty-tag.medium {
+  background: #fff4d6;
+  color: #8a5a00;
+}
+
+.question-meta .difficulty-tag.hard {
+  background: #fae8e8;
+  color: var(--danger);
 }
 
 .editor-shell {
@@ -428,8 +487,13 @@ pre {
 
   .login-layout,
   .hero,
-  .setup-form {
+  .exam-launch-card {
     grid-template-columns: 1fr;
+  }
+
+  .exam-launch-card {
+    align-items: stretch;
+    flex-direction: column;
   }
 
   .stats-grid {

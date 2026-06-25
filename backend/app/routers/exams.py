@@ -14,6 +14,7 @@ from app.schemas.exam import (
     QuestionOut,
     WrongQuestionOut,
 )
+from app.services.exam_generator import build_balanced_exam
 from app.services.feedback_generator import build_exam_feedback
 
 router = APIRouter(tags=["exams"])
@@ -21,36 +22,12 @@ router = APIRouter(tags=["exams"])
 
 @router.post("/generate-exam", response_model=GenerateExamResponse)
 def generate_exam(payload: GenerateExamRequest, db: Session = Depends(get_db)) -> GenerateExamResponse:
-    if payload.topic == "__all__":
-        questions = (
-            db.query(Question)
-            .filter(Question.difficulty == payload.difficulty)
-            .order_by(Question.id)
-            .limit(8)
-            .all()
-        )
-    else:
-        questions = (
-            db.query(Question)
-            .filter(Question.topic == payload.topic, Question.difficulty == payload.difficulty)
-            .order_by(Question.id)
-            .limit(payload.number_of_questions)
-            .all()
-        )
+    available_questions = db.query(Question).order_by(Question.id).all()
 
-    target_count = 8 if payload.topic == "__all__" else payload.number_of_questions
-    if len(questions) < target_count:
-        fallback_questions = (
-            db.query(Question)
-            .filter(Question.difficulty == payload.difficulty)
-            .order_by(Question.id)
-            .limit(target_count)
-            .all()
-        )
-        questions = fallback_questions
-
-    if not questions:
-        raise HTTPException(status_code=404, detail="No questions are available for this difficulty yet.")
+    try:
+        questions = build_balanced_exam(available_questions)
+    except ValueError as error:
+        raise HTTPException(status_code=404, detail=str(error)) from error
 
     user = None
     if payload.username:
@@ -62,8 +39,8 @@ def generate_exam(payload: GenerateExamRequest, db: Session = Depends(get_db)) -
 
     exam = Exam(
         user_id=user.id if user else None,
-        topic="full exam" if payload.topic == "__all__" else payload.topic,
-        difficulty=payload.difficulty,
+        topic="full exam",
+        difficulty="mixed",
     )
     db.add(exam)
     db.flush()

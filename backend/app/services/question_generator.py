@@ -3,12 +3,14 @@ from app.models.question import Question
 
 SUPPORTED_TOPICS = [
     "lists",
+    "strings",
     "integers",
     "number theory",
     "file processing",
     "matrices",
     "patterns",
     "sets and words",
+    "recursion",
 ]
 
 
@@ -21,7 +23,7 @@ def seed_original_questions() -> list[Question]:
                 "then decompose the remaining list into maximal strictly increasing runs. Return the runs as a list of lists."
             ),
             topic="lists",
-            difficulty="standard",
+            difficulty="easy",
             function_signature="increasing_runs(values)",
             starter_code="def increasing_runs(values):\n    # write your code here\n    pass\n",
             test_cases=[
@@ -56,7 +58,7 @@ def seed_original_questions() -> list[Question]:
             title="Count Set Bits",
             description="Write a function that returns the binary representation of a positive integer and the number of bits set to 1.",
             topic="integers",
-            difficulty="standard",
+            difficulty="easy",
             function_signature="binary_bit_count(n)",
             starter_code="def binary_bit_count(n):\n    # write your code here\n    pass\n",
             test_cases=[
@@ -74,7 +76,7 @@ def seed_original_questions() -> list[Question]:
                 "Return a list of [prime, exponent] pairs in increasing prime order."
             ),
             topic="number theory",
-            difficulty="standard",
+            difficulty="medium",
             function_signature="prime_factors(n)",
             starter_code="def prime_factors(n):\n    # write your code here\n    pass\n",
             test_cases=[
@@ -104,7 +106,7 @@ def seed_original_questions() -> list[Question]:
             title="Count Primes In Range",
             description="Write a function that counts how many prime numbers are between a and b, inclusive.",
             topic="number theory",
-            difficulty="standard",
+            difficulty="medium",
             function_signature="count_primes_between(a, b)",
             starter_code="def count_primes_between(a, b):\n    # write your code here\n    pass\n",
             test_cases=[
@@ -139,7 +141,7 @@ def seed_original_questions() -> list[Question]:
                 "and write the same summary to the output file."
             ),
             topic="file processing",
-            difficulty="standard",
+            difficulty="hard",
             function_signature="maximum_inflation(year, input_filename, output_filename)",
             starter_code="def maximum_inflation(year, input_filename, output_filename):\n    # write your code here\n    pass\n",
             test_cases=[
@@ -223,7 +225,7 @@ def seed_original_questions() -> list[Question]:
                 "If all values are distinct, sort all values and refill the square column by column from left to right."
             ),
             topic="matrices",
-            difficulty="standard",
+            difficulty="medium",
             function_signature="analyse_square(square)",
             starter_code="def analyse_square(square):\n    # write your code here\n    pass\n",
             test_cases=[
@@ -268,7 +270,7 @@ def seed_original_questions() -> list[Question]:
                 "The first row has one digit, the second row has three digits, and so on. Digits continue modulo 10."
             ),
             topic="patterns",
-            difficulty="standard",
+            difficulty="easy",
             function_signature="digit_pyramid(height)",
             starter_code="def digit_pyramid(height):\n    # write your code here\n    pass\n",
             test_cases=[
@@ -297,7 +299,7 @@ def seed_original_questions() -> list[Question]:
                 "Return all alphabetically ordered pairs of words that together use every given letter exactly once."
             ),
             topic="sets and words",
-            difficulty="standard",
+            difficulty="hard",
             function_signature="word_pairs_using_all_letters(letters, dictionary_filename)",
             starter_code="def word_pairs_using_all_letters(letters, dictionary_filename):\n    # write your code here\n    pass\n",
             test_cases=[
@@ -341,6 +343,227 @@ def seed_original_questions() -> list[Question]:
                 "            if first_set.isdisjoint(second_set) and first_set | second_set == target:\n"
                 "                pairs.add(tuple(sorted([first, second])))\n"
                 "    return [list(pair) for pair in sorted(pairs)]\n"
+            ),
+        ),
+        Question(
+            title="Remove Consecutive Duplicate Characters",
+            description="Write a function that removes consecutive duplicate characters from a string and returns the cleaned string.",
+            topic="strings",
+            difficulty="easy",
+            function_signature="remove_consecutive_duplicates(word)",
+            starter_code="def remove_consecutive_duplicates(word):\n    # write your code here\n    pass\n",
+            test_cases=[
+                {"input": {"word": ""}, "expected": ""},
+                {"input": {"word": "aaabbbbbaaa"}, "expected": "aba"},
+                {"input": {"word": "abcaaabbbcccabc"}, "expected": "abcabcabc"},
+                {"input": {"word": "aaabbbbbaaacaacdddd"}, "expected": "abacacd", "hidden": True},
+            ],
+            reference_solution=(
+                "def remove_consecutive_duplicates(word):\n"
+                "    if not word:\n"
+                "        return \"\"\n"
+                "    result = [word[0]]\n"
+                "    for character in word[1:]:\n"
+                "        if character != result[-1]:\n"
+                "            result.append(character)\n"
+                "    return \"\".join(result)\n"
+            ),
+        ),
+        Question(
+            title="Longest Consecutive Letter Substring",
+            description=(
+                "Write a function that receives a nonempty lowercase string and returns the leftmost longest substring "
+                "whose letters are consecutive in alphabetical order."
+            ),
+            topic="strings",
+            difficulty="medium",
+            function_signature="longest_consecutive_substring(word)",
+            starter_code="def longest_consecutive_substring(word):\n    # write your code here\n    pass\n",
+            test_cases=[
+                {"input": {"word": "x"}, "expected": {"length": 1, "substring": "x"}},
+                {"input": {"word": "ababcuvwaba"}, "expected": {"length": 3, "substring": "abc"}},
+                {"input": {"word": "abbcedffghiefghiaaabbcdefgg"}, "expected": {"length": 6, "substring": "bcdefg"}},
+                {"input": {"word": "abcabccdefcdefghacdef"}, "expected": {"length": 6, "substring": "cdefgh"}, "hidden": True},
+            ],
+            reference_solution=(
+                "def longest_consecutive_substring(word):\n"
+                "    best_start = start = 0\n"
+                "    best_length = current_length = 1\n"
+                "    for index in range(1, len(word)):\n"
+                "        if ord(word[index - 1]) + 1 == ord(word[index]):\n"
+                "            current_length += 1\n"
+                "            if current_length > best_length:\n"
+                "                best_length = current_length\n"
+                "                best_start = start\n"
+                "        else:\n"
+                "            start = index\n"
+                "            current_length = 1\n"
+                "    substring = word[best_start:best_start + best_length]\n"
+                "    return {\"length\": best_length, \"substring\": substring}\n"
+            ),
+        ),
+        Question(
+            title="Increasing Sublists",
+            description="Write a function that decomposes a list into maximal strictly increasing contiguous sublists.",
+            topic="lists",
+            difficulty="easy",
+            function_signature="increasing_sublists(values)",
+            starter_code="def increasing_sublists(values):\n    # write your code here\n    pass\n",
+            test_cases=[
+                {"input": {"values": []}, "expected": []},
+                {"input": {"values": [6, 6, 0]}, "expected": [[6], [6], [0]]},
+                {"input": {"values": [2, 9, 1, 4]}, "expected": [[2, 9], [1, 4]]},
+                {"input": {"values": [4, 18, 2, 8, 3, 15, 14, 15, 20, 12]}, "expected": [[4, 18], [2, 8], [3, 15], [14, 15, 20], [12]], "hidden": True},
+            ],
+            reference_solution=(
+                "def increasing_sublists(values):\n"
+                "    result = []\n"
+                "    for value in values:\n"
+                "        if not result or value <= result[-1][-1]:\n"
+                "            result.append([value])\n"
+                "        else:\n"
+                "            result[-1].append(value)\n"
+                "    return result\n"
+            ),
+        ),
+        Question(
+            title="Largest Prime Below",
+            description="Write a function that returns the largest prime number strictly smaller than n.",
+            topic="number theory",
+            difficulty="medium",
+            function_signature="largest_prime_below(n)",
+            starter_code="def largest_prime_below(n):\n    # write your code here\n    pass\n",
+            test_cases=[
+                {"input": {"n": 3}, "expected": 2},
+                {"input": {"n": 10}, "expected": 7},
+                {"input": {"n": 210}, "expected": 199},
+                {"input": {"n": 1318}, "expected": 1307, "hidden": True},
+            ],
+            reference_solution=(
+                "def largest_prime_below(n):\n"
+                "    def is_prime(number):\n"
+                "        if number < 2:\n"
+                "            return False\n"
+                "        if number == 2:\n"
+                "            return True\n"
+                "        if number % 2 == 0:\n"
+                "            return False\n"
+                "        divisor = 3\n"
+                "        while divisor * divisor <= number:\n"
+                "            if number % divisor == 0:\n"
+                "                return False\n"
+                "            divisor += 2\n"
+                "        return True\n"
+                "    candidate = n - 1\n"
+                "    while not is_prime(candidate):\n"
+                "        candidate -= 1\n"
+                "    return candidate\n"
+            ),
+        ),
+        Question(
+            title="Maximum Prime Gap",
+            description="Write a function that returns the largest gap between successive prime numbers in the inclusive interval [a, b].",
+            topic="number theory",
+            difficulty="hard",
+            function_signature="maximum_prime_gap(a, b)",
+            starter_code="def maximum_prime_gap(a, b):\n    # write your code here\n    pass\n",
+            test_cases=[
+                {"input": {"a": 3, "b": 3}, "expected": 0},
+                {"input": {"a": 2, "b": 12}, "expected": 3},
+                {"input": {"a": 20, "b": 106}, "expected": 7},
+                {"input": {"a": 31, "b": 291}, "expected": 13, "hidden": True},
+            ],
+            reference_solution=(
+                "def maximum_prime_gap(a, b):\n"
+                "    def is_prime(number):\n"
+                "        if number < 2:\n"
+                "            return False\n"
+                "        if number == 2:\n"
+                "            return True\n"
+                "        if number % 2 == 0:\n"
+                "            return False\n"
+                "        divisor = 3\n"
+                "        while divisor * divisor <= number:\n"
+                "            if number % divisor == 0:\n"
+                "                return False\n"
+                "            divisor += 2\n"
+                "        return True\n"
+                "    primes = [number for number in range(a, b + 1) if is_prime(number)]\n"
+                "    if len(primes) < 2:\n"
+                "        return 0\n"
+                "    return max(primes[index + 1] - primes[index] - 1 for index in range(len(primes) - 1))\n"
+            ),
+        ),
+        Question(
+            title="Product Of Distinct Prime Factors",
+            description="Write a function that returns the product of the distinct prime divisors of an integer n >= 2.",
+            topic="number theory",
+            difficulty="medium",
+            function_signature="single_factors(number)",
+            starter_code="def single_factors(number):\n    # write your code here\n    pass\n",
+            test_cases=[
+                {"input": {"number": 2}, "expected": 2},
+                {"input": {"number": 4096}, "expected": 2},
+                {"input": {"number": 10440125}, "expected": 85},
+                {"input": {"number": 52399401037149926144}, "expected": 154, "hidden": True},
+            ],
+            reference_solution=(
+                "def single_factors(number):\n"
+                "    product = 1\n"
+                "    divisor = 2\n"
+                "    while divisor * divisor <= number:\n"
+                "        if number % divisor == 0:\n"
+                "            product *= divisor\n"
+                "            while number % divisor == 0:\n"
+                "                number //= divisor\n"
+                "        divisor += 1\n"
+                "    if number > 1:\n"
+                "        product *= number\n"
+                "    return product\n"
+            ),
+        ),
+        Question(
+            title="Descending Digit Pyramid",
+            description="Write a function that returns a right-shifted descending digit pyramid as a list of strings.",
+            topic="patterns",
+            difficulty="medium",
+            function_signature="descending_digit_pyramid(height)",
+            starter_code="def descending_digit_pyramid(height):\n    # write your code here\n    pass\n",
+            test_cases=[
+                {"input": {"height": 1}, "expected": ["0"]},
+                {"input": {"height": 3}, "expected": ["21012", " 101", "  0"]},
+                {"input": {"height": 5}, "expected": ["432101234", " 3210123", "  21012", "   101", "    0"]},
+                {"input": {"height": 10}, "expected": ["9876543210123456789", " 87654321012345678", "  765432101234567", "   6543210123456", "    54321012345", "     432101234", "      3210123", "       21012", "        101", "         0"], "hidden": True},
+            ],
+            reference_solution=(
+                "def descending_digit_pyramid(height):\n"
+                "    rows = []\n"
+                "    for row in range(height):\n"
+                "        start = height - 1 - row\n"
+                "        left = [str(value % 10) for value in range(start, -1, -1)]\n"
+                "        right = [str(value % 10) for value in range(1, start + 1)]\n"
+                "        rows.append(\" \" * row + \"\".join(left + right))\n"
+                "    return rows\n"
+            ),
+        ),
+        Question(
+            title="Unique Characters Recursively",
+            description="Write a recursive function that keeps the first occurrence of each character in a string and removes later duplicates.",
+            topic="recursion",
+            difficulty="easy",
+            function_signature="unique_characters(text)",
+            starter_code="def unique_characters(text):\n    # write your code here\n    pass\n",
+            test_cases=[
+                {"input": {"text": ""}, "expected": ""},
+                {"input": {"text": "banana"}, "expected": "ban"},
+                {"input": {"text": "apple"}, "expected": "aple"},
+                {"input": {"text": "abcabc"}, "expected": "abc", "hidden": True},
+            ],
+            reference_solution=(
+                "def unique_characters(text):\n"
+                "    if not text:\n"
+                "        return \"\"\n"
+                "    return text[0] + unique_characters(text[1:].replace(text[0], \"\"))\n"
             ),
         ),
     ]
