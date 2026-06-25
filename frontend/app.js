@@ -370,7 +370,9 @@ function renderModelOptions(filterText = "") {
   if (!elements.modelSelect.value && models.length) {
     elements.modelSelect.value = models[0].id;
   }
-  setModelValue(state.defaultModel, false);
+  if (!normalizedFilter) {
+    setModelValue(state.defaultModel, false);
+  }
   updateCustomModelVisibility();
 }
 
