@@ -11,6 +11,7 @@ class QuestionOut(BaseModel):
     difficulty: str
     function_signature: str
     starter_code: str
+    examples: list[dict] = Field(default_factory=list)
 
 
 class GenerateExamRequest(BaseModel):

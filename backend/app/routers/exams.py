@@ -20,6 +20,24 @@ from app.services.feedback_generator import build_exam_feedback
 router = APIRouter(tags=["exams"])
 
 
+def question_to_out(question: Question) -> QuestionOut:
+    examples = [
+        {"input": test_case["input"], "expected": test_case["expected"]}
+        for test_case in question.test_cases
+        if not test_case.get("hidden")
+    ]
+    return QuestionOut(
+        id=question.id,
+        title=question.title,
+        description=question.description,
+        topic=question.topic,
+        difficulty=question.difficulty,
+        function_signature=question.function_signature,
+        starter_code=question.starter_code,
+        examples=examples,
+    )
+
+
 @router.post("/generate-exam", response_model=GenerateExamResponse)
 def generate_exam(payload: GenerateExamRequest, db: Session = Depends(get_db)) -> GenerateExamResponse:
     available_questions = db.query(Question).order_by(Question.id).all()
@@ -55,7 +73,7 @@ def generate_exam(payload: GenerateExamRequest, db: Session = Depends(get_db)) -
         exam_id=exam.id,
         topic=exam.topic,
         difficulty=exam.difficulty,
-        questions=[QuestionOut.model_validate(question, from_attributes=True) for question in questions],
+        questions=[question_to_out(question) for question in questions],
     )
 
 
@@ -111,7 +129,7 @@ def get_exam(exam_id: int, db: Session = Depends(get_db)) -> GenerateExamRespons
         exam_id=exam.id,
         topic=exam.topic,
         difficulty=exam.difficulty,
-        questions=[QuestionOut.model_validate(link.question, from_attributes=True) for link in ordered_links],
+        questions=[question_to_out(link.question) for link in ordered_links],
     )
 
 

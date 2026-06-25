@@ -11,6 +11,7 @@ SUPPORTED_TOPICS = [
     "patterns",
     "sets and words",
     "recursion",
+    "classes",
 ]
 
 
@@ -564,6 +565,87 @@ def seed_original_questions() -> list[Question]:
                 "    if not text:\n"
                 "        return \"\"\n"
                 "    return text[0] + unique_characters(text[1:].replace(text[0], \"\"))\n"
+            ),
+        ),
+        Question(
+            title="Bank Account Class",
+            description=(
+                "Create a BankAccount class. It should store a balance, allow deposits, allow withdrawals only when there is enough money, "
+                "and add interest by multiplying the current balance by a rate."
+            ),
+            topic="classes",
+            difficulty="medium",
+            function_signature="BankAccount(initial_balance=0)",
+            starter_code=(
+                "class BankAccount:\n"
+                "    def __init__(self, initial_balance=0):\n"
+                "        # write your code here\n"
+                "        pass\n"
+                "\n"
+                "    def deposit(self, amount):\n"
+                "        pass\n"
+                "\n"
+                "    def withdraw(self, amount):\n"
+                "        pass\n"
+                "\n"
+                "    def add_interest(self, rate):\n"
+                "        pass\n"
+            ),
+            test_cases=[
+                {
+                    "kind": "class",
+                    "class_name": "BankAccount",
+                    "input": {"initial_balance": 100, "actions": ["deposit 50", "withdraw 30", "balance"]},
+                    "init": {"initial_balance": 100},
+                    "steps": [
+                        {"method": "deposit", "args": [50]},
+                        {"method": "withdraw", "args": [30]},
+                        {"attribute": "balance"},
+                    ],
+                    "expected": [150, 120, 120],
+                },
+                {
+                    "kind": "class",
+                    "class_name": "BankAccount",
+                    "input": {"initial_balance": 200, "actions": ["withdraw 500", "balance"]},
+                    "init": {"initial_balance": 200},
+                    "steps": [
+                        {"method": "withdraw", "args": [500]},
+                        {"attribute": "balance"},
+                    ],
+                    "expected": [False, 200],
+                },
+                {
+                    "kind": "class",
+                    "class_name": "BankAccount",
+                    "input": {"initial_balance": 1000, "actions": ["add_interest 0.05", "balance"]},
+                    "init": {"initial_balance": 1000},
+                    "steps": [
+                        {"method": "add_interest", "args": [0.05]},
+                        {"attribute": "balance"},
+                    ],
+                    "expected": [1050.0, 1050.0],
+                    "hidden": True,
+                },
+            ],
+            reference_solution=(
+                "class BankAccount:\n"
+                "    def __init__(self, initial_balance=0):\n"
+                "        self.balance = initial_balance\n"
+                "\n"
+                "    def deposit(self, amount):\n"
+                "        self.balance += amount\n"
+                "        return self.balance\n"
+                "\n"
+                "    def withdraw(self, amount):\n"
+                "        if amount > self.balance:\n"
+                "            return False\n"
+                "        self.balance -= amount\n"
+                "        return self.balance\n"
+                "\n"
+                "    def add_interest(self, rate):\n"
+                "        self.balance *= 1 + rate\n"
+                "        return self.balance\n"
             ),
         ),
     ]

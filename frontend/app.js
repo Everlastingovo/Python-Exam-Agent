@@ -5,7 +5,9 @@ const state = {
   username: localStorage.getItem("pea_username") || "",
   topics: [],
   currentExam: null,
+  currentQuestionIndex: 0,
   submissions: new Map(),
+  drafts: new Map(),
   timerId: null,
   examEndsAt: null,
 };
@@ -22,11 +24,18 @@ const elements = {
   sections: document.querySelectorAll(".view-section"),
   topicCount: document.querySelector("#topicCount"),
   examForm: document.querySelector("#examForm"),
+  aiForm: document.querySelector("#aiForm"),
+  apiKeyInput: document.querySelector("#apiKeyInput"),
+  modelSelect: document.querySelector("#modelSelect"),
+  aiResultList: document.querySelector("#aiResultList"),
   timerDisplay: document.querySelector("#timerDisplay"),
   scoreDisplay: document.querySelector("#scoreDisplay"),
   examWorkspace: document.querySelector("#examWorkspace"),
   examTitle: document.querySelector("#examTitle"),
   questionList: document.querySelector("#questionList"),
+  prevQuestionButton: document.querySelector("#prevQuestionButton"),
+  nextQuestionButton: document.querySelector("#nextQuestionButton"),
+  questionProgress: document.querySelector("#questionProgress"),
   finishExamButton: document.querySelector("#finishExamButton"),
   finalFeedback: document.querySelector("#finalFeedback"),
   wrongList: document.querySelector("#wrongList"),
@@ -93,8 +102,14 @@ function bindEvents() {
     event.preventDefault();
     await generateExam();
   });
+  elements.aiForm.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    await generateAiQuestions();
+  });
 
   elements.finishExamButton.addEventListener("click", finishExam);
+  elements.prevQuestionButton.addEventListener("click", () => moveQuestion(-1));
+  elements.nextQuestionButton.addEventListener("click", () => moveQuestion(1));
   elements.refreshWrongButton.addEventListener("click", loadWrongQuestions);
   elements.refreshHistoryButton.addEventListener("click", loadHistory);
 }
@@ -144,7 +159,9 @@ async function generateExam() {
       username: state.username,
     });
     state.currentExam = exam;
+    state.currentQuestionIndex = 0;
     state.submissions.clear();
+    state.drafts.clear();
     elements.finalFeedback.classList.add("hidden");
     elements.examWorkspace.classList.remove("hidden");
     elements.examTitle.textContent = `${exam.topic} exam #${exam.exam_id}`;
@@ -158,11 +175,47 @@ async function generateExam() {
 }
 
 function renderQuestions(questions) {
-  elements.questionList.innerHTML = questions.map((question, index) => questionTemplate(question, index)).join("");
-  questions.forEach((question) => {
-    const button = document.querySelector(`[data-submit-question="${question.id}"]`);
-    button.addEventListener("click", () => submitAnswer(question.id));
-  });
+  renderCurrentQuestion();
+}
+
+function moveQuestion(direction) {
+  if (!state.currentExam) {
+    return;
+  }
+  saveCurrentDraft();
+  const nextIndex = state.currentQuestionIndex + direction;
+  if (nextIndex < 0 || nextIndex >= state.currentExam.questions.length) {
+    return;
+  }
+  state.currentQuestionIndex = nextIndex;
+  renderCurrentQuestion();
+}
+
+function renderCurrentQuestion() {
+  const questions = state.currentExam?.questions || [];
+  if (!questions.length) {
+    elements.questionList.innerHTML = "";
+    return;
+  }
+
+  const question = questions[state.currentQuestionIndex];
+  elements.questionProgress.textContent = `Question ${state.currentQuestionIndex + 1} of ${questions.length}`;
+  elements.prevQuestionButton.disabled = state.currentQuestionIndex === 0;
+  elements.nextQuestionButton.disabled = state.currentQuestionIndex === questions.length - 1;
+  elements.questionList.innerHTML = questionTemplate(question, state.currentQuestionIndex);
+  const button = document.querySelector(`[data-submit-question="${question.id}"]`);
+  button.addEventListener("click", () => submitAnswer(question.id));
+}
+
+function saveCurrentDraft() {
+  const question = state.currentExam?.questions[state.currentQuestionIndex];
+  if (!question) {
+    return;
+  }
+  const textarea = document.querySelector(`#code-${question.id}`);
+  if (textarea) {
+    state.drafts.set(question.id, textarea.value);
+  }
 }
 
 function questionTemplate(question, index) {
@@ -178,12 +231,16 @@ function questionTemplate(question, index) {
         <h3>${escapeHtml(question.title)}</h3>
         <p>${escapeHtml(question.description)}</p>
       </div>
+      <div class="examples-panel">
+        <h4>Examples</h4>
+        ${renderExamples(question.examples || [])}
+      </div>
       <div class="editor-shell">
         <div class="editor-header">
           <span>submission.py</span>
           <span>Python</span>
         </div>
-        <textarea id="code-${question.id}" spellcheck="false">${escapeHtml(question.starter_code)}</textarea>
+        <textarea id="code-${question.id}" spellcheck="false">${escapeHtml(state.drafts.get(question.id) || question.starter_code)}</textarea>
       </div>
       <div>
         <button type="button" data-submit-question="${question.id}">Compile & Run Tests</button>
@@ -191,6 +248,17 @@ function questionTemplate(question, index) {
       <div id="output-${question.id}" class="output-panel hidden"></div>
     </article>
   `;
+}
+
+function renderExamples(examples) {
+  if (!examples.length) {
+    return `<pre>No visible examples.</pre>`;
+  }
+  return examples
+    .map((example, index) => (
+      `<pre>Example ${index + 1}\nInput: ${escapeHtml(JSON.stringify(example.input))}\nExpected: ${escapeHtml(JSON.stringify(example.expected))}</pre>`
+    ))
+    .join("");
 }
 
 async function submitAnswer(questionId) {
@@ -215,6 +283,7 @@ async function submitAnswer(questionId) {
       question_id: questionId,
       code,
     });
+    state.drafts.set(questionId, textarea.value);
     state.submissions.set(questionId, result);
     output.innerHTML = renderSubmissionOutput(result);
     updateScore();
@@ -384,6 +453,46 @@ function historyTemplate(item) {
       <h3>Score: ${item.solved_questions}/${item.total_questions || 8}</h3>
       <p>Total submissions: ${item.total_submissions}</p>
       <p>${formatDate(item.created_at)}</p>
+    </article>
+  `;
+}
+
+async function generateAiQuestions() {
+  const apiKey = elements.apiKeyInput.value.trim();
+  const model = elements.modelSelect.value;
+  if (!apiKey) {
+    showToast("Please enter an API key.");
+    return;
+  }
+
+  elements.aiResultList.innerHTML = `<div class="empty-state">Generating questions...</div>`;
+  try {
+    const result = await apiPost("/ai/generate-questions", {
+      api_key: apiKey,
+      model,
+    });
+    elements.aiResultList.innerHTML = result.questions.map(aiQuestionTemplate).join("");
+    elements.apiKeyInput.value = "";
+    showToast("AI questions generated.");
+  } catch (error) {
+    elements.aiResultList.innerHTML = `<div class="empty-state">${escapeHtml(error.message)}</div>`;
+  }
+}
+
+function aiQuestionTemplate(question) {
+  const examples = (question.examples || [])
+    .map((example, index) => `Example ${index + 1}: ${JSON.stringify(example)}`)
+    .join("\n");
+  return `
+    <article class="stack-item">
+      <div class="question-meta">
+        <span>${escapeHtml(question.topic)}</span>
+        <span class="difficulty-tag ${escapeHtml(question.difficulty)}">${escapeHtml(question.difficulty)}</span>
+        <span>${escapeHtml(question.function_signature)}</span>
+      </div>
+      <h3>${escapeHtml(question.title)}</h3>
+      <p>${escapeHtml(question.description)}</p>
+      <pre>${escapeHtml(examples || "No examples returned.")}</pre>
     </article>
   `;
 }

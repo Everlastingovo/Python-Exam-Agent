@@ -20,8 +20,21 @@ try:
     spec = importlib.util.spec_from_file_location("submission", module_path)
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
-    function = getattr(module, function_name)
-    actual = function(**test_case["input"])
+    if test_case.get("kind") == "class":
+        class_name = test_case["class_name"]
+        cls = getattr(module, class_name)
+        instance = cls(**test_case.get("init", {{}}))
+        outputs = []
+        for step in test_case.get("steps", []):
+            if "method" in step:
+                method = getattr(instance, step["method"])
+                outputs.append(method(*step.get("args", []), **step.get("kwargs", {{}})))
+            elif "attribute" in step:
+                outputs.append(getattr(instance, step["attribute"]))
+        actual = outputs
+    else:
+        function = getattr(module, function_name)
+        actual = function(**test_case["input"])
     print(json.dumps({{"ok": True, "actual": actual}}))
 except Exception as exc:
     print(json.dumps({{"ok": False, "error": traceback.format_exc(limit=3)}}))

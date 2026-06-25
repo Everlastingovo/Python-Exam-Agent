@@ -140,15 +140,27 @@ Exam flow
 1. Click Start Exam.
 2. Click Start 8-Question Exam.
 3. Complete the exam within 90 minutes.
-4. Write code in the editor.
-5. Click Compile & Run Tests.
-6. Review visible test results and hidden backend edge test status.
-7. Click Finish Exam to see the final score.
+4. Use Previous and Next to move one question at a time.
+5. Read the visible examples before writing code.
+6. Write code in the editor.
+7. Click Compile & Run Tests.
+8. Review visible test results and hidden backend edge test status.
+9. Click Finish Exam to see the final score.
+
+AI question generation
+
+1. Click AI Generator.
+2. Enter your API key.
+3. Choose a model version.
+4. Click Generate AI Questions.
+5. The generated questions are drafts based on the existing built-in question bank.
+6. The API key is used for that request only and is not saved in the database.
 
 Main API endpoints
 
 POST /login
 GET  /topics
+POST /ai/generate-questions
 POST /generate-exam
 POST /submit-answer
 POST /finish-exam/{exam_id}

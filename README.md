@@ -12,6 +12,8 @@ This repository currently contains the Phase 1 backend architecture:
 - automatic test-case execution
 - 90-minute 8-question exam UI
 - visible and hidden backend edge tests
+- one-question-at-a-time exam navigation
+- optional AI question draft generation with user-provided API key
 - basic mistake feedback
 - exam history and final feedback report endpoints
 
@@ -96,6 +98,7 @@ http://127.0.0.1:8000/docs
 ```text
 POST /login
 GET  /topics
+POST /ai/generate-questions
 POST /generate-exam
 POST /submit-answer
 POST /finish-exam/{exam_id}
@@ -158,6 +161,12 @@ creates those files in an isolated temporary folder before executing the answer.
   "expected": ["Ada"]
 }
 ```
+
+### Class-Based Test Cases
+
+Class questions can use `kind: "class"` with constructor inputs and method steps.
+For example, the built-in Bank Account question tests deposits, withdrawals,
+interest, and the final balance attribute.
 
 ### Hidden Backend Tests
 

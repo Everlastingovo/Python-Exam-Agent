@@ -42,6 +42,7 @@
         <nav class="tabs" aria-label="Main sections">
           <button class="tab active" type="button" data-view="homeSection">Home</button>
           <button class="tab" type="button" data-view="examSection">Start Exam</button>
+          <button class="tab" type="button" data-view="aiSection">AI Generator</button>
           <button class="tab" type="button" data-view="wrongSection">Wrong Questions</button>
           <button class="tab" type="button" data-view="historySection">History</button>
         </nav>
@@ -116,9 +117,44 @@
                 <button id="finishExamButton" class="secondary" type="button">Finish Exam</button>
               </div>
             </div>
+            <div class="question-pager">
+              <button id="prevQuestionButton" class="secondary" type="button">Previous</button>
+              <span id="questionProgress">Question 1 of 8</span>
+              <button id="nextQuestionButton" class="secondary" type="button">Next</button>
+            </div>
             <div id="questionList" class="question-list"></div>
             <div id="finalFeedback" class="feedback-panel hidden"></div>
           </div>
+        </section>
+
+        <section id="aiSection" class="view-section hidden">
+          <div class="section-header">
+            <div>
+              <p class="eyebrow">AI Question Generator</p>
+              <h2>Generate a new balanced exam draft</h2>
+              <p class="section-copy">
+                Add an API key and choose a model version. The AI will use the existing question bank as style reference
+                and draft 8 new questions with mixed difficulty.
+              </p>
+            </div>
+          </div>
+          <form id="aiForm" class="ai-card">
+            <label>
+              API key
+              <input id="apiKeyInput" type="password" placeholder="sk-..." autocomplete="off">
+            </label>
+            <label>
+              Model version
+              <select id="modelSelect">
+                <option value="gpt-4.1-mini">gpt-4.1-mini</option>
+                <option value="gpt-4.1">gpt-4.1</option>
+                <option value="gpt-4o-mini">gpt-4o-mini</option>
+              </select>
+            </label>
+            <button type="submit">Generate AI Questions</button>
+            <p class="form-note">The API key is sent only for this request and is not saved in the database.</p>
+          </form>
+          <div id="aiResultList" class="stack-list"></div>
         </section>
 
         <section id="wrongSection" class="view-section hidden">
