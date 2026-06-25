@@ -67,13 +67,14 @@ Start the frontend in a second terminal from the project root:
 
 ```bash
 cd frontend
-python -m http.server 5173
+python -m http.server 3000
 ```
 
 Open the frontend:
 
 ```text
-http://127.0.0.1:5173
+http://localhost:3000
+http://127.0.0.1:3000
 ```
 
 Demo login account:
@@ -86,6 +87,7 @@ Password: 123456
 Open the API docs:
 
 ```text
+http://localhost:8000/docs
 http://127.0.0.1:8000/docs
 ```
 
