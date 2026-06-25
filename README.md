@@ -41,10 +41,17 @@ From the project root:
 
 ```bash
 cd backend
+python --version
 python -m venv .venv
 .venv\Scripts\activate
 pip install -r requirements.txt
 uvicorn app.main:app --reload
+```
+
+Recommended Python version:
+
+```text
+Python 3.12
 ```
 
 Open the API docs:
