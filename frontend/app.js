@@ -81,6 +81,7 @@ const elements = {
   sidebarToggle: document.querySelector("#sidebarToggle"),
   sidebarToggleText: document.querySelector("#sidebarToggleText"),
   sidebarToggleArrow: document.querySelector("#sidebarToggleArrow"),
+  sidebarCollapseButton: document.querySelector("#sidebarCollapseButton"),
   tabs: document.querySelectorAll(".tab"),
   wrongBadge: document.querySelector("#wrongBadge"),
   historyBadge: document.querySelector("#historyBadge"),
@@ -246,6 +247,11 @@ function bindEvents() {
 
   elements.sidebarToggle.addEventListener("click", () => {
     elements.sidebar.classList.toggle("open");
+    updateSidebarToggle();
+  });
+
+  elements.sidebarCollapseButton.addEventListener("click", () => {
+    elements.sidebar.classList.remove("open");
     updateSidebarToggle();
   });
 
@@ -693,18 +699,19 @@ async function loadDailyQuestionPreview() {
     return;
   }
   try {
-    const daily = await apiGet(`/daily-question?username=${encodeURIComponent(state.username)}&start=true`);
+    const daily = await apiGet(`/daily-question?username=${encodeURIComponent(state.username)}`);
     state.dailyPreview = daily;
     elements.dailyTitle.textContent = daily.question.title;
     elements.dailyMeta.textContent = `${daily.date} · ${daily.question.topic} · ${daily.question.difficulty} · ${daily.attempts} attempts · ${daily.solve_rate}% solved`;
   } catch (error) {
-    elements.dailyMeta.textContent = error.message;
+    elements.dailyTitle.textContent = "Daily question is loading";
+    elements.dailyMeta.textContent = friendlyApiError(error, "Daily question is not available yet. Please make sure the backend is running.");
   }
 }
 
 async function startDailyQuestion() {
   try {
-    const daily = await apiGet(`/daily-question?username=${encodeURIComponent(state.username)}`);
+    const daily = await apiGet(`/daily-question?username=${encodeURIComponent(state.username)}&start=true`);
     state.currentExam = {
       exam_id: daily.exam_id,
       topic: "daily challenge",
@@ -776,7 +783,7 @@ async function loadSharedQuestions() {
       button.addEventListener("click", () => startSharedQuestion(Number(button.dataset.startShared)));
     });
   } catch (error) {
-    elements.sharedQuestionList.innerHTML = `<div class="mini-empty">${escapeHtml(error.message)}</div>`;
+    elements.sharedQuestionList.innerHTML = `<div class="mini-empty">${escapeHtml(friendlyApiError(error, "No shared questions are available yet."))}</div>`;
   }
 }
 
@@ -1512,12 +1519,11 @@ async function loadWrongQuestions() {
 
   try {
     const items = await apiGet(`/wrong-questions?username=${encodeURIComponent(state.username)}`);
+    updateBadge(elements.wrongBadge, items.length, { alertWhenPositive: true });
     if (!items.length) {
-      elements.wrongBadge.textContent = "0";
       elements.wrongList.innerHTML = `<div class="empty-state">No wrong questions yet. Start an exam and submit answers to build this collection.</div>`;
       return;
     }
-    elements.wrongBadge.textContent = String(items.length);
     elements.wrongList.innerHTML = items.map(wrongQuestionTemplate).join("");
   } catch (error) {
     elements.wrongList.innerHTML = `<div class="empty-state">${escapeHtml(error.message)}</div>`;
@@ -1547,7 +1553,7 @@ function wrongQuestionTemplate(item) {
 async function loadHistory() {
   try {
     const items = await apiGet("/history");
-    elements.historyBadge.textContent = String(items.length);
+    updateBadge(elements.historyBadge, items.length);
     if (!items.length) {
       elements.historyList.innerHTML = `<div class="empty-state">No exam history yet.</div>`;
       return;
@@ -1556,6 +1562,12 @@ async function loadHistory() {
   } catch (error) {
     elements.historyList.innerHTML = `<div class="empty-state">${escapeHtml(error.message)}</div>`;
   }
+}
+
+function updateBadge(badge, count, options = {}) {
+  badge.textContent = String(count);
+  badge.classList.toggle("zero", count === 0);
+  badge.classList.toggle("has-count", count > 0 && Boolean(options.alertWhenPositive));
 }
 
 function historyTemplate(item) {
@@ -1642,6 +1654,14 @@ async function parseResponse(response) {
     throw new Error(data.detail || "Request failed. Is the backend server running?");
   }
   return data;
+}
+
+function friendlyApiError(error, fallback) {
+  const message = String(error?.message || "").trim();
+  if (!message || message.toLowerCase() === "not found") {
+    return fallback;
+  }
+  return message;
 }
 
 function showToast(message) {

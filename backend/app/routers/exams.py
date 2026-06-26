@@ -156,6 +156,21 @@ def generate_practice(payload: GenerateExamRequest, db: Session = Depends(get_db
         difficulty="mixed",
         status="practice",
     )
+    db.add(exam)
+    db.flush()
+
+    for index, question in enumerate(questions, start=1):
+        db.add(ExamQuestion(exam_id=exam.id, question_id=question.id, order_number=index))
+
+    db.commit()
+    db.refresh(exam)
+
+    return GenerateExamResponse(
+        exam_id=exam.id,
+        topic=exam.topic,
+        difficulty=exam.difficulty,
+        questions=[question_to_out(question) for question in questions],
+    )
 
 
 @router.get("/daily-question", response_model=DailyQuestionOut)
@@ -265,21 +280,6 @@ def start_shared_question(share_id: int, payload: GenerateExamRequest, db: Sessi
         topic=exam.topic,
         difficulty=exam.difficulty,
         questions=[question_to_out(question)],
-    )
-    db.add(exam)
-    db.flush()
-
-    for index, question in enumerate(questions, start=1):
-        db.add(ExamQuestion(exam_id=exam.id, question_id=question.id, order_number=index))
-
-    db.commit()
-    db.refresh(exam)
-
-    return GenerateExamResponse(
-        exam_id=exam.id,
-        topic=exam.topic,
-        difficulty=exam.difficulty,
-        questions=[question_to_out(question) for question in questions],
     )
 
 

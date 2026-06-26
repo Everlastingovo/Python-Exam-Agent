@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Python Exam Agent</title>
-    <link rel="stylesheet" href="styles.css?v=20260627-home-community">
+    <link rel="stylesheet" href="styles.css?v=20260627-dashboard-polish">
   </head>
   <body>
     <header class="topbar">
@@ -75,6 +75,10 @@
               <button class="tab" type="button" data-view="wrongSection"><span class="nav-icon">!</span>Wrong Questions <span id="wrongBadge" class="menu-badge">0</span></button>
               <button class="tab" type="button" data-view="historySection"><span class="nav-icon">◷</span>History <span id="historyBadge" class="menu-badge">0</span></button>
             </nav>
+            <div class="sidebar-footer">
+              <button id="settingsButton" class="sidebar-action" type="button"><span class="nav-icon">⚙</span>Settings</button>
+              <button id="sidebarCollapseButton" class="sidebar-action" type="button"><span class="nav-icon">←</span>Collapse</button>
+            </div>
           </aside>
 
           <div class="content-area">
@@ -86,6 +90,24 @@
                   <h2>Start Test</h2>
                   <p>Begin one balanced 8-question Python exam immediately.</p>
                   <button id="homeStartButton" type="button">Start Test</button>
+                </div>
+
+                <div class="home-side">
+                  <article class="home-action-card">
+                    <span>Today's Practice</span>
+                    <strong>One daily Python task</strong>
+                    <p>Warm up with a single question before the full exam.</p>
+                  </article>
+                  <article class="home-action-card ai-cardlet">
+                    <span>AI Feedback</span>
+                    <strong>Review your latest learning report</strong>
+                    <p>Use a verified API key to unlock AI study suggestions.</p>
+                  </article>
+                  <article class="home-action-card">
+                    <span>Wrong Questions</span>
+                    <strong>Review weak topics</strong>
+                    <p>Return to failed questions saved in your local database.</p>
+                  </article>
                 </div>
 
                 <div class="daily-panel">
@@ -350,8 +372,6 @@
       </section>
     </main>
 
-    <button id="settingsButton" class="settings-button hidden" type="button">Settings</button>
-
     <section id="settingsPanel" class="settings-panel hidden" aria-label="Settings">
       <aside class="settings-sidebar">
         <button id="settingsCloseButton" class="settings-back" type="button">← Back to app</button>
@@ -424,6 +444,6 @@
     </section>
 
     <div id="toast" class="toast hidden"></div>
-    <script src="app.js?v=20260627-home-community"></script>
+    <script src="app.js?v=20260627-dashboard-polish"></script>
   </body>
 </html>
