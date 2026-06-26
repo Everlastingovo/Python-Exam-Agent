@@ -82,7 +82,7 @@ chmod +x run.sh stop.sh
 Recommended Python version:
 
 ```text
-Python 3.12
+Python 3.12 or 3.13
 ```
 
 The one-click runner starts:

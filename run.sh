@@ -5,6 +5,7 @@ ROOT="$(cd "$(dirname "$0")" && pwd)"
 RUN_DIR="$ROOT/.run"
 VENV_DIR="$ROOT/.venv"
 PYTHON_BIN="$VENV_DIR/bin/python"
+SUPPORTED_PYTHON_PATTERN='^(3\.12|3\.13)\.'
 
 mkdir -p "$RUN_DIR"
 cd "$ROOT"
@@ -44,17 +45,41 @@ PY
 }
 
 echo "==> Preparing Python environment"
+python_version() {
+  "$1" - <<'PY'
+import sys
+print(f"{sys.version_info.major}.{sys.version_info.minor}.{sys.version_info.micro}")
+PY
+}
+
+python_matches() {
+  local executable="$1"
+  [[ -x "$executable" ]] || return 1
+  [[ "$(python_version "$executable")" =~ $SUPPORTED_PYTHON_PATTERN ]]
+}
+
+if [[ -x "$PYTHON_BIN" ]] && ! python_matches "$PYTHON_BIN"; then
+  echo "Existing .venv uses Python $(python_version "$PYTHON_BIN"). Recreating .venv with Python 3.12 or 3.13."
+  rm -rf "$VENV_DIR"
+fi
+
 if [[ ! -x "$PYTHON_BIN" ]]; then
-  if command -v python3 >/dev/null 2>&1; then
+  if command -v python3.12 >/dev/null 2>&1; then
+    python3.12 -m venv "$VENV_DIR"
+  elif command -v python3.13 >/dev/null 2>&1; then
+    python3.13 -m venv "$VENV_DIR"
+  elif command -v python3 >/dev/null 2>&1 && [[ "$(python_version "$(command -v python3)")" =~ $SUPPORTED_PYTHON_PATTERN ]]; then
     python3 -m venv "$VENV_DIR"
   else
-    echo "Python 3 was not found. Please install Python 3.12 or newer."
+    echo "Python 3.12 or 3.13 was not found. Please install Python 3.12/3.13, then run ./run.sh again."
     exit 1
   fi
 fi
 
+echo "Using Python $(python_version "$PYTHON_BIN") from .venv."
 "$PYTHON_BIN" -m pip install --upgrade pip
-"$PYTHON_BIN" -m pip install -r "$ROOT/requirements.txt"
+"$PYTHON_BIN" -m pip install --upgrade wheel setuptools
+"$PYTHON_BIN" -m pip install --only-binary=:all: -r "$ROOT/requirements.txt"
 
 echo "==> Restarting project servers"
 stop_existing backend
