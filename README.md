@@ -42,21 +42,41 @@ Python-Exam-Agent/
 |   |-- index.html
 |   |-- styles.css
 |   `-- app.js
+|-- run.ps1
+|-- stop.ps1
+|-- start.bat
+|-- stop.bat
+|-- run.sh
+|-- stop.sh
 |-- README.md
 `-- .gitignore
 ```
 
 ## Run Locally
 
-Start the backend from the project root:
+Recommended one-click run on Windows:
+
+```powershell
+.\run.ps1
+```
+
+You can also double-click:
+
+```text
+start.bat
+```
+
+If Windows blocks script execution, use:
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File .\run.ps1
+```
+
+Recommended one-click run on macOS/Linux:
 
 ```bash
-cd backend
-python --version
-python -m venv .venv
-.venv\Scripts\activate
-pip install -r requirements.txt
-uvicorn app.main:app --reload
+chmod +x run.sh stop.sh
+./run.sh
 ```
 
 Recommended Python version:
@@ -65,14 +85,43 @@ Recommended Python version:
 Python 3.12
 ```
 
-Start the frontend in a second terminal from the project root:
+The one-click runner starts:
+
+```text
+Frontend: http://localhost:3000
+Backend docs: http://localhost:8000/docs
+```
+
+Stop the app:
+
+```powershell
+.\stop.ps1
+```
+
+On macOS/Linux:
+
+```bash
+./stop.sh
+```
+
+Manual backend start from the project root:
+
+```bash
+python -m venv .venv
+.venv\Scripts\activate
+pip install -r requirements.txt
+cd backend
+uvicorn app.main:app --reload --host 127.0.0.1 --port 8000
+```
+
+Manual frontend start in a second terminal from the project root:
 
 ```bash
 cd frontend
 python -m http.server 3000
 ```
 
-Open the frontend:
+Open the frontend manually:
 
 ```text
 http://localhost:3000
