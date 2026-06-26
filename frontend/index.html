@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Python Exam Agent</title>
-    <link rel="stylesheet" href="styles.css?v=20260627-dashboard-polish">
+    <link rel="stylesheet" href="styles.css?v=20260627-home-dashboard-tight">
   </head>
   <body>
     <header class="topbar">
@@ -56,28 +56,29 @@
       </section>
 
       <section id="appView" class="hidden">
-        <button id="sidebarToggle" class="drawer-handle" type="button" aria-label="Open menu">
-          <span id="sidebarToggleText">Menu</span>
-          <strong id="sidebarToggleArrow">→</strong>
-        </button>
         <div class="app-shell">
           <aside class="sidebar" id="sidebar">
             <div class="sidebar-brand">
+              <img src="assets/app-logo.png" alt="Python Exam Agent logo">
               <div>
-                <strong>Menu</strong>
-                <span>Choose a workspace section</span>
+                <strong>Python Exam Agent</strong>
+                <span>Learning workspace</span>
               </div>
+              <button id="sidebarToggle" class="sidebar-top-toggle" type="button" aria-label="Collapse sidebar" title="Collapse sidebar">
+                <span id="sidebarToggleText">Collapse</span>
+                <strong id="sidebarToggleArrow">←</strong>
+              </button>
             </div>
             <nav class="tabs" aria-label="Main sections">
-              <button class="tab active" type="button" data-view="homeSection"><span class="nav-icon">⌂</span>Home</button>
-              <button class="tab" type="button" data-view="descriptionSection"><span class="nav-icon">□</span>Description</button>
-              <button class="tab ai-tab" type="button" data-view="aiSection"><span class="nav-icon">✦</span>AI Generator <span class="menu-badge ai">AI</span></button>
-              <button class="tab" type="button" data-view="wrongSection"><span class="nav-icon">!</span>Wrong Questions <span id="wrongBadge" class="menu-badge">0</span></button>
-              <button class="tab" type="button" data-view="historySection"><span class="nav-icon">◷</span>History <span id="historyBadge" class="menu-badge">0</span></button>
+              <button class="tab active" type="button" data-view="homeSection" title="Home"><span class="nav-icon">⌂</span><span class="nav-label">Home</span></button>
+              <button class="tab" type="button" data-view="descriptionSection" title="Description"><span class="nav-icon">□</span><span class="nav-label">Description</span></button>
+              <button class="tab ai-tab" type="button" data-view="aiSection" title="AI Generator"><span class="nav-icon">✦</span><span class="nav-label">AI Generator</span> <span class="menu-badge ai">AI</span></button>
+              <button class="tab" type="button" data-view="wrongSection" title="Wrong Questions"><span class="nav-icon">!</span><span class="nav-label">Wrong Questions</span> <span id="wrongBadge" class="menu-badge">0</span></button>
+              <button class="tab" type="button" data-view="historySection" title="History"><span class="nav-icon">◷</span><span class="nav-label">History</span> <span id="historyBadge" class="menu-badge">0</span></button>
             </nav>
             <div class="sidebar-footer">
-              <button id="settingsButton" class="sidebar-action" type="button"><span class="nav-icon">⚙</span>Settings</button>
-              <button id="sidebarCollapseButton" class="sidebar-action" type="button"><span class="nav-icon">←</span>Collapse</button>
+              <button id="settingsButton" class="sidebar-action" type="button" title="Settings"><span class="nav-icon">⚙</span><span class="nav-label">Settings</span></button>
+              <button id="sidebarCollapseButton" class="sidebar-action" type="button" title="Collapse"><span class="nav-icon">←</span><span class="nav-label">Collapse</span></button>
             </div>
           </aside>
 
@@ -88,57 +89,70 @@
                   <img src="assets/app-logo.png" alt="Python Exam Agent logo">
                   <p class="eyebrow">Ready</p>
                   <h2>Start Test</h2>
-                  <p>Begin one balanced 8-question Python exam immediately.</p>
+                  <p>8 questions · 90 minutes · automatic grading · AI feedback after exam</p>
                   <button id="homeStartButton" type="button">Start Test</button>
                 </div>
 
                 <div class="home-side">
-                  <article class="home-action-card">
+                  <button class="home-action-card" type="button" id="homeDailyShortcut">
                     <span>Today's Practice</span>
                     <strong>One daily Python task</strong>
                     <p>Warm up with a single question before the full exam.</p>
-                  </article>
-                  <article class="home-action-card ai-cardlet">
+                    <i>→</i>
+                  </button>
+                  <button class="home-action-card ai-cardlet" type="button" id="homeAiShortcut">
                     <span>AI Feedback</span>
                     <strong>Review your latest learning report</strong>
                     <p>Use a verified API key to unlock AI study suggestions.</p>
-                  </article>
-                  <article class="home-action-card">
+                    <i>→</i>
+                  </button>
+                  <button class="home-action-card" type="button" id="homeWrongShortcut">
                     <span>Wrong Questions</span>
                     <strong>Review weak topics</strong>
                     <p>Return to failed questions saved in your local database.</p>
-                  </article>
+                    <i>→</i>
+                  </button>
                 </div>
 
                 <div class="daily-panel">
                   <div>
-                    <p class="eyebrow">Daily Challenge</p>
+                    <p class="eyebrow">Today's Task</p>
                     <h3 id="dailyTitle">One question for today</h3>
                     <p id="dailyMeta">Practise one Python question every day and build a steady habit.</p>
+                    <p class="daily-due">Due today</p>
                   </div>
-                  <button id="dailyChallengeButton" class="secondary" type="button">Start Daily Question</button>
+                  <button id="dailyChallengeButton" class="secondary" type="button">Start Challenge</button>
                 </div>
 
-                <div class="share-panel">
+                <div class="recent-panel">
                   <div>
-                    <p class="eyebrow">Community Question</p>
-                    <h3>Share a favourite question</h3>
-                    <p>Other users can solve it, and the card will show how many people answered and the correct rate.</p>
+                    <p class="eyebrow">Recent Attempts</p>
+                    <h3>Latest learning records</h3>
                   </div>
-                  <form id="shareQuestionForm" class="share-form">
-                    <input id="shareTitleInput" type="text" placeholder="Question title" required>
-                    <input id="shareSignatureInput" type="text" placeholder="function_name(arg)" required>
-                    <select id="shareDifficultyInput">
-                      <option value="easy">easy</option>
-                      <option value="medium" selected>medium</option>
-                      <option value="hard">hard</option>
-                    </select>
-                    <textarea id="shareDescriptionInput" placeholder="Describe the task clearly." required></textarea>
-                    <textarea id="shareExamplesInput" placeholder='Examples JSON: [{"input":{"text":"apple"},"expected":"aple"}]' required></textarea>
-                    <button type="submit">Share Question</button>
-                  </form>
-                  <div id="sharedQuestionList" class="shared-question-list"></div>
+                  <div id="homeRecentList" class="home-recent-list">
+                    <div class="mini-empty">No recent attempts yet.</div>
+                  </div>
                 </div>
+
+                <details class="share-panel">
+                  <summary>Share a question +</summary>
+                  <p>Other users can solve it, and the card will show how many people answered and the correct rate.</p>
+                  <div class="share-panel-body">
+                    <form id="shareQuestionForm" class="share-form">
+                      <input id="shareTitleInput" type="text" placeholder="Question title" required>
+                      <input id="shareSignatureInput" type="text" placeholder="function_name(arg)" required>
+                      <select id="shareDifficultyInput">
+                        <option value="easy">easy</option>
+                        <option value="medium" selected>medium</option>
+                        <option value="hard">hard</option>
+                      </select>
+                      <textarea id="shareDescriptionInput" placeholder="Describe the task clearly." required></textarea>
+                      <textarea id="shareExamplesInput" placeholder='Examples JSON: [{"input":{"text":"apple"},"expected":"aple"}]' required></textarea>
+                      <button type="submit">Share Question</button>
+                    </form>
+                    <div id="sharedQuestionList" class="shared-question-list"></div>
+                  </div>
+                </details>
               </div>
             </section>
 
@@ -444,6 +458,6 @@
     </section>
 
     <div id="toast" class="toast hidden"></div>
-    <script src="app.js?v=20260627-dashboard-polish"></script>
+    <script src="app.js?v=20260627-home-dashboard-tight"></script>
   </body>
 </html>

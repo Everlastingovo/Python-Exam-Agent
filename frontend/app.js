@@ -116,6 +116,10 @@ const elements = {
   refreshWrongButton: document.querySelector("#refreshWrongButton"),
   refreshHistoryButton: document.querySelector("#refreshHistoryButton"),
   homeStartButton: document.querySelector("#homeStartButton"),
+  homeDailyShortcut: document.querySelector("#homeDailyShortcut"),
+  homeAiShortcut: document.querySelector("#homeAiShortcut"),
+  homeWrongShortcut: document.querySelector("#homeWrongShortcut"),
+  homeRecentList: document.querySelector("#homeRecentList"),
   dailyChallengeButton: document.querySelector("#dailyChallengeButton"),
   dailyTitle: document.querySelector("#dailyTitle"),
   dailyMeta: document.querySelector("#dailyMeta"),
@@ -154,6 +158,8 @@ function init() {
   syncApiSettingsInputs();
   updateAuthView();
   if (state.username) {
+    elements.sidebar.classList.add("open");
+    updateSidebarToggle();
     loadTopics();
     loadAccountDetails();
     loadDailyQuestionPreview();
@@ -259,6 +265,9 @@ function bindEvents() {
     showSection("examSection");
     await generateExam();
   });
+  elements.homeDailyShortcut.addEventListener("click", startDailyQuestion);
+  elements.homeAiShortcut.addEventListener("click", () => showSection("aiSection"));
+  elements.homeWrongShortcut.addEventListener("click", () => showSection("wrongSection"));
   elements.dailyChallengeButton.addEventListener("click", startDailyQuestion);
   elements.shareQuestionForm.addEventListener("submit", async (event) => {
     event.preventDefault();
@@ -479,6 +488,9 @@ function updateAuthView(resetSection = false) {
   elements.sidebarToggle.classList.toggle("hidden", !isLoggedIn);
   elements.sidebar.classList.toggle("hidden", !isLoggedIn);
   elements.settingsButton.classList.toggle("hidden", !isLoggedIn);
+  if (isLoggedIn && resetSection) {
+    elements.sidebar.classList.add("open");
+  }
   updateApiWarning();
   updateSidebarToggle();
   if (!isLoggedIn) {
@@ -609,7 +621,6 @@ function showSection(sectionId) {
   if (sectionId === "accountSection") {
     loadAccountDetails();
   }
-  elements.sidebar.classList.remove("open");
   elements.accountQuickMenu.classList.add("hidden");
   elements.apiWarningPopover.classList.add("hidden");
   updateSidebarToggle();
@@ -626,9 +637,10 @@ function updateApiWarning() {
 function updateSidebarToggle() {
   const isOpen = elements.sidebar.classList.contains("open");
   elements.sidebarToggle.classList.toggle("open", isOpen);
-  elements.sidebarToggleText.textContent = isOpen ? "Collapse" : "Menu";
+  elements.sidebarToggleText.textContent = isOpen ? "Collapse" : "Expand";
   elements.sidebarToggleArrow.textContent = isOpen ? "←" : "→";
-  elements.sidebarToggle.setAttribute("aria-label", isOpen ? "Hide menu" : "Open menu");
+  elements.sidebarToggle.setAttribute("aria-label", isOpen ? "Collapse sidebar" : "Expand sidebar");
+  elements.sidebarToggle.setAttribute("title", isOpen ? "Collapse sidebar" : "Expand sidebar");
 }
 
 async function loadTopics() {
@@ -1554,6 +1566,7 @@ async function loadHistory() {
   try {
     const items = await apiGet("/history");
     updateBadge(elements.historyBadge, items.length);
+    renderHomeRecentAttempts(items);
     if (!items.length) {
       elements.historyList.innerHTML = `<div class="empty-state">No exam history yet.</div>`;
       return;
@@ -1562,6 +1575,26 @@ async function loadHistory() {
   } catch (error) {
     elements.historyList.innerHTML = `<div class="empty-state">${escapeHtml(error.message)}</div>`;
   }
+}
+
+function renderHomeRecentAttempts(items) {
+  if (!elements.homeRecentList) {
+    return;
+  }
+  if (!items.length) {
+    elements.homeRecentList.innerHTML = `<div class="mini-empty">No recent attempts yet.</div>`;
+    return;
+  }
+  elements.homeRecentList.innerHTML = items.slice(0, 3).map((item) => `
+    <div class="home-recent-row">
+      <span>Exam #${item.exam_id}</span>
+      <strong>${item.solved_questions}/${item.total_questions || 8} passed</strong>
+      <button class="ghost" type="button" data-view-history>Open</button>
+    </div>
+  `).join("");
+  elements.homeRecentList.querySelectorAll("[data-view-history]").forEach((button) => {
+    button.addEventListener("click", () => showSection("historySection"));
+  });
 }
 
 function updateBadge(badge, count, options = {}) {
