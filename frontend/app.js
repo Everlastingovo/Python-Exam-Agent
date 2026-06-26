@@ -39,6 +39,7 @@ const state = {
   editorTheme: localStorage.getItem("pea_editor_theme") || "dark",
   accentColor: localStorage.getItem("pea_accent_color") || "blue",
   apiKey: localStorage.getItem("pea_api_key") || "",
+  apiKeyVerified: localStorage.getItem("pea_api_key_verified") === "true",
   defaultModel: localStorage.getItem("pea_default_model") || "gpt-5.4-mini",
   topics: [],
   currentExam: null,
@@ -57,6 +58,8 @@ const elements = {
   passwordInput: document.querySelector("#passwordInput"),
   brandHomeButton: document.querySelector("#brandHomeButton"),
   userLabel: document.querySelector("#userLabel"),
+  apiWarningButton: document.querySelector("#apiWarningButton"),
+  apiWarningPopover: document.querySelector("#apiWarningPopover"),
   accountButton: document.querySelector("#accountButton"),
   accountQuickMenu: document.querySelector("#accountQuickMenu"),
   accountDetailsOption: document.querySelector("#accountDetailsOption"),
@@ -78,7 +81,6 @@ const elements = {
   sidebarToggle: document.querySelector("#sidebarToggle"),
   sidebarToggleText: document.querySelector("#sidebarToggleText"),
   sidebarToggleArrow: document.querySelector("#sidebarToggleArrow"),
-  sidebarClose: document.querySelector("#sidebarClose"),
   tabs: document.querySelectorAll(".tab"),
   sections: document.querySelectorAll(".view-section"),
   topicCount: document.querySelector("#topicCount"),
@@ -93,8 +95,6 @@ const elements = {
   timerDisplay: document.querySelector("#timerDisplay"),
   scoreDisplay: document.querySelector("#scoreDisplay"),
   examWorkspace: document.querySelector("#examWorkspace"),
-  editorLightButton: document.querySelector("#editorLightButton"),
-  editorDarkButton: document.querySelector("#editorDarkButton"),
   examTitle: document.querySelector("#examTitle"),
   questionList: document.querySelector("#questionList"),
   prevQuestionButton: document.querySelector("#prevQuestionButton"),
@@ -187,6 +187,10 @@ function bindEvents() {
     elements.accountQuickMenu.classList.toggle("hidden");
   });
 
+  elements.apiWarningButton.addEventListener("click", () => {
+    elements.apiWarningPopover.classList.toggle("hidden");
+  });
+
   elements.accountDetailsOption.addEventListener("click", () => {
     showSection("accountSection");
     loadAccountDetails();
@@ -219,14 +223,7 @@ function bindEvents() {
     updateSidebarToggle();
   });
 
-  elements.sidebarClose.addEventListener("click", () => {
-    elements.sidebar.classList.remove("open");
-    updateSidebarToggle();
-  });
-
   elements.homeStartButton.addEventListener("click", () => showSection("examSection"));
-  elements.editorLightButton.addEventListener("click", () => setEditorTheme("light"));
-  elements.editorDarkButton.addEventListener("click", () => setEditorTheme("dark"));
   elements.settingsEditorLightButton.addEventListener("click", () => setEditorTheme("light"));
   elements.settingsEditorDarkButton.addEventListener("click", () => setEditorTheme("dark"));
   elements.backHomeButtons.forEach((button) => {
@@ -298,10 +295,11 @@ function applyEditorTheme() {
   const isLight = state.editorTheme === "light";
   elements.examWorkspace.classList.toggle("editor-light", isLight);
   elements.examWorkspace.classList.toggle("editor-dark", !isLight);
-  elements.editorLightButton.classList.toggle("active", isLight);
-  elements.editorDarkButton.classList.toggle("active", !isLight);
   elements.settingsEditorLightButton.classList.toggle("active", isLight);
   elements.settingsEditorDarkButton.classList.toggle("active", !isLight);
+  document.querySelectorAll("[data-editor-theme]").forEach((button) => {
+    button.classList.toggle("active", button.dataset.editorTheme === state.editorTheme);
+  });
 }
 
 function setAccentColor(accent) {
@@ -342,12 +340,18 @@ function syncApiSettingsInputs() {
 }
 
 function saveApiSettings() {
+  const previousKey = state.apiKey;
   state.apiKey = elements.settingsApiKeyInput.value.trim();
   state.defaultModel = elements.settingsModelInput.value.trim() || "gpt-5.4-mini";
+  if (previousKey !== state.apiKey) {
+    state.apiKeyVerified = false;
+    localStorage.setItem("pea_api_key_verified", "false");
+  }
   localStorage.setItem("pea_api_key", state.apiKey);
   localStorage.setItem("pea_default_model", state.defaultModel);
   elements.apiKeyInput.value = state.apiKey;
   setModelValue(state.defaultModel);
+  updateApiWarning();
   showToast("API settings saved in this browser.");
 }
 
@@ -428,10 +432,12 @@ function updateAuthView(resetSection = false) {
   elements.sidebarToggle.classList.toggle("hidden", !isLoggedIn);
   elements.sidebar.classList.toggle("hidden", !isLoggedIn);
   elements.settingsButton.classList.toggle("hidden", !isLoggedIn);
+  updateApiWarning();
   updateSidebarToggle();
   if (!isLoggedIn) {
     elements.accountQuickMenu.classList.add("hidden");
     elements.settingsPanel.classList.add("hidden");
+    elements.apiWarningPopover.classList.add("hidden");
   }
   if (isLoggedIn && resetSection) {
     showSection("homeSection");
@@ -558,7 +564,16 @@ function showSection(sectionId) {
   }
   elements.sidebar.classList.remove("open");
   elements.accountQuickMenu.classList.add("hidden");
+  elements.apiWarningPopover.classList.add("hidden");
   updateSidebarToggle();
+}
+
+function updateApiWarning() {
+  const shouldShow = Boolean(state.username) && !state.apiKeyVerified;
+  elements.apiWarningButton.classList.toggle("hidden", !shouldShow);
+  if (!shouldShow) {
+    elements.apiWarningPopover.classList.add("hidden");
+  }
 }
 
 function updateSidebarToggle() {
@@ -662,6 +677,10 @@ function renderCurrentQuestion() {
   elements.questionList.innerHTML = questionTemplate(question, state.currentQuestionIndex);
   const button = document.querySelector(`[data-submit-question="${question.id}"]`);
   button.addEventListener("click", () => submitAnswer(question.id));
+  document.querySelectorAll("[data-editor-theme]").forEach((themeButton) => {
+    themeButton.addEventListener("click", () => setEditorTheme(themeButton.dataset.editorTheme));
+  });
+  applyEditorTheme();
 }
 
 function saveCurrentDraft() {
@@ -695,7 +714,13 @@ function questionTemplate(question, index) {
       <div class="editor-shell">
         <div class="editor-header">
           <span>submission.py</span>
-          <span>Python</span>
+          <span class="editor-header-actions">
+            <span>Python</span>
+            <span class="editor-theme-toggle compact" aria-label="Editor appearance">
+              <button class="secondary" type="button" data-editor-theme="light">Light</button>
+              <button class="secondary" type="button" data-editor-theme="dark">Dark</button>
+            </span>
+          </span>
         </div>
         <textarea id="code-${question.id}" spellcheck="false">${escapeHtml(state.drafts.get(question.id) || question.starter_code)}</textarea>
       </div>
@@ -941,6 +966,9 @@ async function generateAiQuestions() {
       api_key: apiKey,
       model,
     });
+    state.apiKeyVerified = true;
+    localStorage.setItem("pea_api_key_verified", "true");
+    updateApiWarning();
     elements.aiResultList.innerHTML = result.questions.map(aiQuestionTemplate).join("");
     elements.apiKeyInput.value = "";
     showToast("AI questions generated.");

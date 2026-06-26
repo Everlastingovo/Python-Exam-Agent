@@ -17,6 +17,15 @@
       </button>
       <div class="user-panel">
         <span id="userLabel">Not logged in</span>
+        <button id="apiWarningButton" class="api-warning hidden" type="button" aria-label="API key is not verified">!</button>
+        <div id="apiWarningPopover" class="api-warning-popover hidden">
+          <strong>API key is not verified</strong>
+          <p>Your API key has not been verified yet. AI features may not work until a request succeeds.</p>
+          <ul>
+            <li>AI-assisted learning feedback</li>
+            <li>AI question bank updates</li>
+          </ul>
+        </div>
         <button id="accountButton" class="avatar-button hidden" type="button" aria-label="Account details">T</button>
         <div id="accountQuickMenu" class="account-quick-menu hidden">
           <button id="accountDetailsOption" type="button">User Details</button>
@@ -59,7 +68,6 @@
                 <span>Choose a workspace section</span>
               </div>
             </div>
-            <button id="sidebarClose" class="sidebar-toggle" type="button" aria-label="Close menu">Close ←</button>
             <nav class="tabs" aria-label="Main sections">
               <button class="tab active" type="button" data-view="homeSection">Home</button>
               <button class="tab" type="button" data-view="descriptionSection">Description</button>
@@ -149,10 +157,6 @@
                 <h3 id="examTitle">Exam</h3>
               </div>
               <div class="exam-status">
-                <div class="editor-theme-toggle" aria-label="Editor appearance">
-                  <button id="editorLightButton" class="secondary" type="button">Light</button>
-                  <button id="editorDarkButton" class="secondary active" type="button">Dark</button>
-                </div>
                 <span id="timerDisplay" class="timer-pill">90:00</span>
                 <span id="scoreDisplay" class="score-pill">0/8</span>
                 <button id="finishExamButton" class="secondary" type="button">Finish Exam</button>

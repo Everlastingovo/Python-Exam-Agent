@@ -351,6 +351,55 @@ textarea {
   background: linear-gradient(135deg, var(--primary-dark), #1f2937);
 }
 
+.api-warning {
+  align-items: center;
+  background: #dc2626;
+  border-radius: 999px;
+  box-shadow: 0 8px 18px rgba(220, 38, 38, 0.24);
+  color: #ffffff;
+  display: inline-flex;
+  font-weight: 900;
+  height: 34px;
+  justify-content: center;
+  padding: 0;
+  width: 34px;
+}
+
+.api-warning:hover {
+  background: #b91c1c;
+}
+
+.api-warning-popover {
+  background: #ffffff;
+  border: 1px solid #fecaca;
+  border-radius: 8px;
+  box-shadow: 0 18px 46px rgba(15, 23, 42, 0.16);
+  color: var(--text);
+  display: grid;
+  gap: 8px;
+  padding: 14px;
+  position: absolute;
+  right: 58px;
+  top: calc(100% + 12px);
+  white-space: normal;
+  width: 310px;
+  z-index: 41;
+}
+
+.api-warning-popover strong {
+  color: #b91c1c;
+}
+
+.api-warning-popover p,
+.api-warning-popover ul {
+  color: var(--muted);
+  margin-bottom: 0;
+}
+
+.api-warning-popover ul {
+  padding-left: 18px;
+}
+
 .account-quick-menu {
   background: rgba(255, 255, 255, 0.98);
   border: 1px solid var(--line);
@@ -470,16 +519,6 @@ textarea {
 .sidebar-brand span {
   color: var(--muted);
   font-size: 12px;
-}
-
-.sidebar-toggle {
-  background: #eef4ff;
-  color: var(--text);
-  width: 100%;
-}
-
-.sidebar-toggle:hover {
-  background: #dfeaff;
 }
 
 .content-area {
@@ -887,6 +926,23 @@ textarea {
   padding: 4px;
 }
 
+.editor-theme-toggle.compact {
+  background: rgba(148, 163, 184, 0.16);
+  border-color: rgba(148, 163, 184, 0.28);
+  padding: 2px;
+}
+
+.editor-theme-toggle.compact button {
+  color: inherit;
+  font-size: 12px;
+  padding: 4px 8px;
+}
+
+.editor-theme-toggle.compact button.active {
+  background: var(--primary);
+  color: #ffffff;
+}
+
 .editor-theme-toggle button {
   background: transparent;
   border-radius: 999px;
@@ -1081,6 +1137,12 @@ textarea {
   color: #93a4bd;
 }
 
+.editor-header-actions {
+  align-items: center;
+  display: inline-flex;
+  gap: 10px;
+}
+
 .examples-panel {
   background: #f8fbff;
   border: 1px solid var(--line);
@@ -1123,6 +1185,10 @@ textarea {
   color: #64748b;
 }
 
+.workspace.editor-light .editor-theme-toggle.compact {
+  background: #dbe5f6;
+}
+
 .workspace.editor-light .output-panel {
   background: #f8fbff;
   border: 1px solid var(--line);
@@ -1145,6 +1211,10 @@ textarea {
 .workspace.editor-dark .editor-header {
   background: #172033;
   color: #cbd5e1;
+}
+
+.workspace.editor-dark .editor-theme-toggle.compact {
+  background: rgba(15, 23, 42, 0.42);
 }
 
 .workspace.editor-dark .output-panel {
