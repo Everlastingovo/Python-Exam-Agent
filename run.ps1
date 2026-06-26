@@ -52,8 +52,14 @@ function Get-PythonVersionText {
         return $null
     }
 
-    $VersionText = & $Executable -c "import sys; print(f'{sys.version_info.major}.{sys.version_info.minor}.{sys.version_info.micro}')" 2>$null
-    if ($LASTEXITCODE -ne 0) {
+    try {
+        $VersionText = & $Executable -c "import sys; print(f'{sys.version_info.major}.{sys.version_info.minor}.{sys.version_info.micro}')" 2>$null
+    }
+    catch {
+        return $null
+    }
+
+    if ($LASTEXITCODE -ne 0 -or -not $VersionText) {
         return $null
     }
 

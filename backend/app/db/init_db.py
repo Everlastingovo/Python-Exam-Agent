@@ -2,7 +2,7 @@ from sqlalchemy import inspect, text
 from sqlalchemy.orm import Session
 
 from app.db.session import Base, engine
-from app.models import Exam, ExamQuestion, FeedbackReport, Question, Submission, User
+from app.models import Exam, ExamQuestion, FeedbackReport, Question, SharedQuestion, Submission, User
 from app.services.question_generator import seed_original_questions
 from app.services.auth import hash_password
 

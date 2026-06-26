@@ -82,6 +82,8 @@ const elements = {
   sidebarToggleText: document.querySelector("#sidebarToggleText"),
   sidebarToggleArrow: document.querySelector("#sidebarToggleArrow"),
   tabs: document.querySelectorAll(".tab"),
+  wrongBadge: document.querySelector("#wrongBadge"),
+  historyBadge: document.querySelector("#historyBadge"),
   sections: document.querySelectorAll(".view-section"),
   topicCount: document.querySelector("#topicCount"),
   examForm: document.querySelector("#examForm"),
@@ -95,18 +97,34 @@ const elements = {
   timerDisplay: document.querySelector("#timerDisplay"),
   scoreDisplay: document.querySelector("#scoreDisplay"),
   examWorkspace: document.querySelector("#examWorkspace"),
+  examLaunchGrid: document.querySelector("#examLaunchGrid"),
   examTitle: document.querySelector("#examTitle"),
   questionList: document.querySelector("#questionList"),
+  questionStatusDots: document.querySelector("#questionStatusDots"),
   prevQuestionButton: document.querySelector("#prevQuestionButton"),
   nextQuestionButton: document.querySelector("#nextQuestionButton"),
   questionProgress: document.querySelector("#questionProgress"),
   finishExamButton: document.querySelector("#finishExamButton"),
+  finishConfirmModal: document.querySelector("#finishConfirmModal"),
+  finishConfirmMessage: document.querySelector("#finishConfirmMessage"),
+  cancelFinishButton: document.querySelector("#cancelFinishButton"),
+  confirmFinishButton: document.querySelector("#confirmFinishButton"),
   finalFeedback: document.querySelector("#finalFeedback"),
   wrongList: document.querySelector("#wrongList"),
   historyList: document.querySelector("#historyList"),
   refreshWrongButton: document.querySelector("#refreshWrongButton"),
   refreshHistoryButton: document.querySelector("#refreshHistoryButton"),
   homeStartButton: document.querySelector("#homeStartButton"),
+  dailyChallengeButton: document.querySelector("#dailyChallengeButton"),
+  dailyTitle: document.querySelector("#dailyTitle"),
+  dailyMeta: document.querySelector("#dailyMeta"),
+  shareQuestionForm: document.querySelector("#shareQuestionForm"),
+  shareTitleInput: document.querySelector("#shareTitleInput"),
+  shareSignatureInput: document.querySelector("#shareSignatureInput"),
+  shareDifficultyInput: document.querySelector("#shareDifficultyInput"),
+  shareDescriptionInput: document.querySelector("#shareDescriptionInput"),
+  shareExamplesInput: document.querySelector("#shareExamplesInput"),
+  sharedQuestionList: document.querySelector("#sharedQuestionList"),
   backHomeButtons: document.querySelectorAll(".back-home-button"),
   settingsButton: document.querySelector("#settingsButton"),
   settingsPanel: document.querySelector("#settingsPanel"),
@@ -137,6 +155,10 @@ function init() {
   if (state.username) {
     loadTopics();
     loadAccountDetails();
+    loadDailyQuestionPreview();
+    loadSharedQuestions();
+    loadWrongQuestions();
+    loadHistory();
   }
 }
 
@@ -156,6 +178,10 @@ function bindEvents() {
       updateAuthView(true);
       loadTopics();
       loadAccountDetails();
+      loadDailyQuestionPreview();
+      loadSharedQuestions();
+      loadWrongQuestions();
+      loadHistory();
       showToast("Login successful.");
     } catch (error) {
       showToast(error.message);
@@ -223,7 +249,15 @@ function bindEvents() {
     updateSidebarToggle();
   });
 
-  elements.homeStartButton.addEventListener("click", () => showSection("examSection"));
+  elements.homeStartButton.addEventListener("click", async () => {
+    showSection("examSection");
+    await generateExam();
+  });
+  elements.dailyChallengeButton.addEventListener("click", startDailyQuestion);
+  elements.shareQuestionForm.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    await shareQuestion();
+  });
   elements.settingsEditorLightButton.addEventListener("click", () => setEditorTheme("light"));
   elements.settingsEditorDarkButton.addEventListener("click", () => setEditorTheme("dark"));
   elements.backHomeButtons.forEach((button) => {
@@ -278,7 +312,14 @@ function bindEvents() {
     updateCustomModelVisibility();
   });
 
-  elements.finishExamButton.addEventListener("click", finishExam);
+  elements.finishExamButton.addEventListener("click", requestFinishExam);
+  elements.cancelFinishButton.addEventListener("click", closeFinishConfirm);
+  elements.confirmFinishButton.addEventListener("click", () => finishExam());
+  elements.finishConfirmModal.addEventListener("click", (event) => {
+    if (event.target === elements.finishConfirmModal) {
+      closeFinishConfirm();
+    }
+  });
   elements.prevQuestionButton.addEventListener("click", () => moveQuestion(-1));
   elements.nextQuestionButton.addEventListener("click", () => moveQuestion(1));
   elements.refreshWrongButton.addEventListener("click", loadWrongQuestions);
@@ -579,7 +620,7 @@ function updateApiWarning() {
 function updateSidebarToggle() {
   const isOpen = elements.sidebar.classList.contains("open");
   elements.sidebarToggle.classList.toggle("open", isOpen);
-  elements.sidebarToggleText.textContent = isOpen ? "Hidden" : "Menu";
+  elements.sidebarToggleText.textContent = isOpen ? "Collapse" : "Menu";
   elements.sidebarToggleArrow.textContent = isOpen ? "←" : "→";
   elements.sidebarToggle.setAttribute("aria-label", isOpen ? "Hide menu" : "Open menu");
 }
@@ -608,6 +649,7 @@ async function generateExam() {
     state.submissions.clear();
     state.drafts.clear();
     elements.finalFeedback.classList.add("hidden");
+    elements.examLaunchGrid.classList.add("hidden");
     elements.examWorkspace.classList.remove("hidden");
     elements.examTitle.textContent = `${exam.topic} exam #${exam.exam_id}`;
     renderQuestions(exam.questions);
@@ -634,12 +676,148 @@ async function generatePractice() {
     state.drafts.clear();
     stopTimer();
     elements.finalFeedback.classList.add("hidden");
+    elements.examLaunchGrid.classList.add("hidden");
     elements.examWorkspace.classList.remove("hidden");
     elements.examTitle.textContent = `Practice bank #${exam.exam_id}`;
     renderQuestions(exam.questions);
     updateScore();
     renderTimer();
     showToast(`Single-question practice started with ${exam.questions.length} questions.`);
+  } catch (error) {
+    showToast(error.message);
+  }
+}
+
+async function loadDailyQuestionPreview() {
+  if (!state.username) {
+    return;
+  }
+  try {
+    const daily = await apiGet(`/daily-question?username=${encodeURIComponent(state.username)}&start=true`);
+    state.dailyPreview = daily;
+    elements.dailyTitle.textContent = daily.question.title;
+    elements.dailyMeta.textContent = `${daily.date} · ${daily.question.topic} · ${daily.question.difficulty} · ${daily.attempts} attempts · ${daily.solve_rate}% solved`;
+  } catch (error) {
+    elements.dailyMeta.textContent = error.message;
+  }
+}
+
+async function startDailyQuestion() {
+  try {
+    const daily = await apiGet(`/daily-question?username=${encodeURIComponent(state.username)}`);
+    state.currentExam = {
+      exam_id: daily.exam_id,
+      topic: "daily challenge",
+      difficulty: daily.question.difficulty,
+      questions: [daily.question],
+      mode: "daily",
+    };
+    state.currentQuestionIndex = 0;
+    state.submissions.clear();
+    state.drafts.clear();
+    stopTimer();
+    showSection("examSection");
+    elements.finalFeedback.classList.add("hidden");
+    elements.examLaunchGrid.classList.add("hidden");
+    elements.examWorkspace.classList.remove("hidden");
+    elements.examTitle.textContent = `Daily challenge · ${daily.date}`;
+    renderQuestions(state.currentExam.questions);
+    updateScore();
+    renderTimer();
+    showToast("Daily question started.");
+  } catch (error) {
+    showToast(error.message);
+  }
+}
+
+async function shareQuestion() {
+  let examples;
+  try {
+    examples = JSON.parse(elements.shareExamplesInput.value);
+  } catch {
+    showToast("Examples must be valid JSON.");
+    return;
+  }
+
+  if (!Array.isArray(examples) || !examples.length) {
+    showToast("Examples JSON must be a non-empty array.");
+    return;
+  }
+
+  try {
+    await apiPost("/shared-questions", {
+      username: state.username || "anonymous",
+      title: elements.shareTitleInput.value.trim(),
+      description: elements.shareDescriptionInput.value.trim(),
+      topic: "community",
+      difficulty: elements.shareDifficultyInput.value,
+      function_signature: elements.shareSignatureInput.value.trim(),
+      examples,
+      note: "Shared from the home page.",
+    });
+    elements.shareQuestionForm.reset();
+    elements.shareDifficultyInput.value = "medium";
+    await loadSharedQuestions();
+    showToast("Question shared.");
+  } catch (error) {
+    showToast(error.message);
+  }
+}
+
+async function loadSharedQuestions() {
+  try {
+    const items = await apiGet("/shared-questions");
+    if (!items.length) {
+      elements.sharedQuestionList.innerHTML = `<div class="mini-empty">No shared questions yet.</div>`;
+      return;
+    }
+    elements.sharedQuestionList.innerHTML = items.map(sharedQuestionTemplate).join("");
+    elements.sharedQuestionList.querySelectorAll("[data-start-shared]").forEach((button) => {
+      button.addEventListener("click", () => startSharedQuestion(Number(button.dataset.startShared)));
+    });
+  } catch (error) {
+    elements.sharedQuestionList.innerHTML = `<div class="mini-empty">${escapeHtml(error.message)}</div>`;
+  }
+}
+
+function sharedQuestionTemplate(item) {
+  return `
+    <article class="shared-question-card">
+      <div>
+        <strong>${escapeHtml(item.question.title)}</strong>
+        <span>${escapeHtml(item.question.difficulty)} · by ${escapeHtml(item.creator_username)}</span>
+      </div>
+      <div class="community-stats">
+        <span>${item.attempts} answered</span>
+        <span>${item.solve_rate}% solved</span>
+      </div>
+      <button class="secondary" type="button" data-start-shared="${item.share_id}">Try</button>
+    </article>
+  `;
+}
+
+async function startSharedQuestion(shareId) {
+  try {
+    const exam = await apiPost(`/shared-questions/${shareId}/start`, {
+      topic: "__all__",
+      difficulty: "mixed",
+      number_of_questions: 1,
+      username: state.username,
+    });
+    state.currentExam = exam;
+    state.currentExam.mode = "community";
+    state.currentQuestionIndex = 0;
+    state.submissions.clear();
+    state.drafts.clear();
+    stopTimer();
+    showSection("examSection");
+    elements.finalFeedback.classList.add("hidden");
+    elements.examLaunchGrid.classList.add("hidden");
+    elements.examWorkspace.classList.remove("hidden");
+    elements.examTitle.textContent = "Community question";
+    renderQuestions(exam.questions);
+    updateScore();
+    renderTimer();
   } catch (error) {
     showToast(error.message);
   }
@@ -674,12 +852,17 @@ function renderCurrentQuestion() {
   elements.questionProgress.textContent = `${label} ${state.currentQuestionIndex + 1} of ${questions.length}`;
   elements.prevQuestionButton.disabled = state.currentQuestionIndex === 0;
   elements.nextQuestionButton.disabled = state.currentQuestionIndex === questions.length - 1;
+  elements.prevQuestionButton.title = state.currentQuestionIndex === 0 ? "This is the first question." : "Save draft and go to the previous question.";
+  elements.nextQuestionButton.textContent = state.currentQuestionIndex === questions.length - 1 ? "Last Question" : "Save & Next";
+  elements.nextQuestionButton.title = state.currentQuestionIndex === questions.length - 1 ? "This is the last question." : "Save draft and go to the next question.";
+  renderQuestionStatusDots();
   elements.questionList.innerHTML = questionTemplate(question, state.currentQuestionIndex);
   const button = document.querySelector(`[data-submit-question="${question.id}"]`);
   button.addEventListener("click", () => submitAnswer(question.id));
   document.querySelectorAll("[data-editor-theme]").forEach((themeButton) => {
     themeButton.addEventListener("click", () => setEditorTheme(themeButton.dataset.editorTheme));
   });
+  setupCodeEditor(question.id);
   applyEditorTheme();
 }
 
@@ -694,52 +877,431 @@ function saveCurrentDraft() {
   }
 }
 
+function renderQuestionStatusDots() {
+  const questions = state.currentExam?.questions || [];
+  elements.questionStatusDots.innerHTML = questions
+    .map((question, index) => {
+      const submission = state.submissions.get(question.id);
+      const status = index === state.currentQuestionIndex
+        ? "current"
+        : submission
+          ? (submission.is_correct ? "correct" : "incorrect")
+          : "unanswered";
+      const label = submission
+        ? (submission.is_correct ? "answered correctly" : "answered incorrectly")
+        : "not answered";
+      return `
+        <button class="question-dot ${status}" type="button" data-question-index="${index}" title="Question ${index + 1}: ${label}">
+          ${index + 1}
+        </button>
+      `;
+    })
+    .join("");
+
+  elements.questionStatusDots.querySelectorAll("[data-question-index]").forEach((button) => {
+    button.addEventListener("click", () => {
+      saveCurrentDraft();
+      state.currentQuestionIndex = Number(button.dataset.questionIndex);
+      renderCurrentQuestion();
+    });
+  });
+}
+
 function questionTemplate(question, index) {
+  const starterCode = state.drafts.get(question.id) || question.starter_code;
+  const functionName = getFunctionName(question.function_signature);
+  const meta = getQuestionMeta(question.difficulty);
   return `
     <article class="question-card" id="question-${question.id}">
-      <div>
-        <div class="question-meta">
-          <span>Question ${index + 1}</span>
-          <span>${escapeHtml(question.topic)}</span>
-          <span class="difficulty-tag ${escapeHtml(question.difficulty)}">${escapeHtml(question.difficulty)}</span>
-          <span>${escapeHtml(question.function_signature)}</span>
+      <div class="question-workspace-grid">
+        <div class="question-reading-pane">
+          <div class="question-brief">
+            <div class="question-meta">
+              <span>Question ${index + 1}</span>
+              <span>${escapeHtml(question.topic)}</span>
+              <span class="difficulty-tag ${escapeHtml(question.difficulty)}">${escapeHtml(question.difficulty)}</span>
+              <span>${meta.minutes} min</span>
+              <span>${meta.points} pts</span>
+            </div>
+            <h3>${escapeHtml(question.title)}</h3>
+            <p>${escapeHtml(question.description)}</p>
+          </div>
+          <div class="question-tabs" aria-label="Question materials">
+            <span>Description</span>
+            <span>Examples</span>
+            <span>Hints</span>
+          </div>
+          <div class="examples-panel">
+            <div class="examples-title-row">
+              <h4>Examples</h4>
+              <span>Example 1 opens by default</span>
+            </div>
+            ${renderExamples(question.examples || [])}
+          </div>
+          <div class="hint-panel">
+            <strong>Code requirement</strong>
+            <span>Function name must remain: <code>${escapeHtml(functionName || question.function_signature)}</code></span>
+            <span>Return the result. Do not print unless the question asks you to print.</span>
+          </div>
         </div>
-        <h3>${escapeHtml(question.title)}</h3>
-        <p>${escapeHtml(question.description)}</p>
-      </div>
-      <div class="examples-panel">
-        <h4>Examples</h4>
-        ${renderExamples(question.examples || [])}
-      </div>
-      <div class="editor-shell">
-        <div class="editor-header">
-          <span>submission.py</span>
-          <span class="editor-header-actions">
-            <span>Python</span>
-            <span class="editor-theme-toggle compact" aria-label="Editor appearance">
-              <button class="secondary" type="button" data-editor-theme="light">Light</button>
-              <button class="secondary" type="button" data-editor-theme="dark">Dark</button>
-            </span>
-          </span>
+
+        <div class="coding-pane">
+          <div class="editor-shell">
+            <div class="editor-header">
+              <span>submission.py</span>
+              <span class="editor-header-actions">
+                <span class="editor-theme-toggle compact" aria-label="Editor appearance">
+                  <button class="secondary" type="button" data-editor-theme="light">Light</button>
+                  <button class="secondary" type="button" data-editor-theme="dark">Dark</button>
+                </span>
+                <span>Python</span>
+              </span>
+            </div>
+            <div class="code-editor-frame">
+              <pre class="line-numbers" id="lines-${question.id}" aria-hidden="true">1</pre>
+              <textarea id="code-${question.id}" data-code-editor="true" spellcheck="false" autocomplete="off" autocorrect="off" autocapitalize="off">${escapeHtml(starterCode)}</textarea>
+            </div>
+          </div>
+          <div class="editor-tip">
+            <span>Tab / Shift+Tab indent, Ctrl+/ comments, Ctrl+Enter runs tests.</span>
+            <span>Enter keeps Python indentation. Keep <code>${escapeHtml(functionName || question.function_signature)}</code> unchanged.</span>
+          </div>
+          <div class="question-actions">
+            <button type="button" data-submit-question="${question.id}">Compile & Run Tests</button>
+            <span class="run-status hidden" id="run-status-${question.id}">Running tests...</span>
+          </div>
+          <div id="output-${question.id}" class="output-panel hidden"></div>
         </div>
-        <textarea id="code-${question.id}" spellcheck="false">${escapeHtml(state.drafts.get(question.id) || question.starter_code)}</textarea>
       </div>
-      <div>
-        <button type="button" data-submit-question="${question.id}">Compile & Run Tests</button>
-      </div>
-      <div id="output-${question.id}" class="output-panel hidden"></div>
     </article>
   `;
 }
 
+function getQuestionMeta(difficulty) {
+  const meta = {
+    easy: { minutes: 5, points: 10 },
+    medium: { minutes: 8, points: 15 },
+    hard: { minutes: 12, points: 20 },
+  };
+  return meta[difficulty] || { minutes: 8, points: 10 };
+}
+
+function getFunctionName(signature) {
+  const match = signature.match(/def\s+([a-zA-Z_][a-zA-Z0-9_]*)\s*\(/);
+  return match ? `${match[1]}(...)` : signature;
+}
+
+function setupCodeEditor(questionId) {
+  const textarea = document.querySelector(`#code-${questionId}`);
+  const lineNumbers = document.querySelector(`#lines-${questionId}`);
+  if (!textarea || !lineNumbers) {
+    return;
+  }
+
+  const updateLineNumbers = () => {
+    const count = Math.max(1, textarea.value.split("\n").length);
+    lineNumbers.textContent = Array.from({ length: count }, (_, index) => index + 1).join("\n");
+  };
+
+  textarea.addEventListener("input", () => {
+    state.drafts.set(questionId, textarea.value);
+    updateLineNumbers();
+  });
+
+  textarea.addEventListener("scroll", () => {
+    lineNumbers.scrollTop = textarea.scrollTop;
+  });
+
+  textarea.addEventListener("keydown", (event) => handleEditorKeydown(event, textarea, questionId), true);
+
+  updateLineNumbers();
+}
+
+function handleEditorKeydown(event, textarea, questionId) {
+  if ((event.ctrlKey || event.metaKey) && event.key === "Enter") {
+    event.preventDefault();
+    event.stopPropagation();
+    submitAnswer(questionId);
+    return;
+  }
+
+  if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "s") {
+    event.preventDefault();
+    event.stopPropagation();
+    state.drafts.set(questionId, textarea.value);
+    showToast("Draft saved locally.");
+    return;
+  }
+
+  if ((event.ctrlKey || event.metaKey) && (event.key === "/" || event.code === "Slash")) {
+    event.preventDefault();
+    event.stopPropagation();
+    toggleLineComment(textarea);
+    textarea.dispatchEvent(new Event("input"));
+    return;
+  }
+
+  if (event.key === "Enter") {
+    event.preventDefault();
+    event.stopPropagation();
+    insertSmartNewline(textarea);
+    textarea.dispatchEvent(new Event("input"));
+    return;
+  }
+
+  if (event.key === "Backspace" && deleteMatchingPair(textarea)) {
+    event.preventDefault();
+    event.stopPropagation();
+    textarea.dispatchEvent(new Event("input"));
+    return;
+  }
+
+  if (insertMatchingPair(event, textarea)) {
+    event.preventDefault();
+    event.stopPropagation();
+    textarea.dispatchEvent(new Event("input"));
+    return;
+  }
+
+  if (skipClosingPair(event, textarea)) {
+    event.preventDefault();
+    event.stopPropagation();
+    return;
+  }
+
+  if (event.key !== "Tab" && event.code !== "Tab") {
+    return;
+  }
+
+  event.preventDefault();
+  event.stopPropagation();
+
+  if (event.shiftKey) {
+    outdentSelection(textarea);
+  }
+  else {
+    indentSelection(textarea);
+  }
+
+  textarea.dispatchEvent(new Event("input"));
+}
+
+function insertSmartNewline(textarea) {
+  const value = textarea.value;
+  const start = textarea.selectionStart;
+  const end = textarea.selectionEnd;
+  const lineStart = value.lastIndexOf("\n", start - 1) + 1;
+  const currentLine = value.slice(lineStart, start);
+  const baseIndent = currentLine.match(/^\s*/)?.[0] || "";
+  const extraIndent = currentLine.trimEnd().endsWith(":") ? "    " : "";
+  const insertion = `\n${baseIndent}${extraIndent}`;
+  textarea.value = `${value.slice(0, start)}${insertion}${value.slice(end)}`;
+  textarea.selectionStart = textarea.selectionEnd = start + insertion.length;
+}
+
+function insertMatchingPair(event, textarea) {
+  if (event.ctrlKey || event.metaKey || event.altKey) {
+    return false;
+  }
+
+  const pairs = {
+    "(": ")",
+    "[": "]",
+    "{": "}",
+    "\"": "\"",
+    "'": "'",
+  };
+  const close = pairs[event.key];
+  if (!close) {
+    return false;
+  }
+
+  const value = textarea.value;
+  const start = textarea.selectionStart;
+  const end = textarea.selectionEnd;
+  const selected = value.slice(start, end);
+
+  textarea.value = `${value.slice(0, start)}${event.key}${selected}${close}${value.slice(end)}`;
+  if (selected) {
+    textarea.selectionStart = start + 1;
+    textarea.selectionEnd = end + 1;
+  }
+  else {
+    textarea.selectionStart = textarea.selectionEnd = start + 1;
+  }
+  return true;
+}
+
+function skipClosingPair(event, textarea) {
+  const closers = new Set([")", "]", "}", "\"", "'"]);
+  if (!closers.has(event.key)) {
+    return false;
+  }
+
+  const position = textarea.selectionStart;
+  if (position !== textarea.selectionEnd || textarea.value[position] !== event.key) {
+    return false;
+  }
+
+  textarea.selectionStart = textarea.selectionEnd = position + 1;
+  return true;
+}
+
+function deleteMatchingPair(textarea) {
+  const start = textarea.selectionStart;
+  const end = textarea.selectionEnd;
+  if (start !== end || start === 0) {
+    return false;
+  }
+
+  const open = textarea.value[start - 1];
+  const close = textarea.value[start];
+  const pairs = {
+    "(": ")",
+    "[": "]",
+    "{": "}",
+    "\"": "\"",
+    "'": "'",
+  };
+
+  if (pairs[open] !== close) {
+    return false;
+  }
+
+  textarea.value = `${textarea.value.slice(0, start - 1)}${textarea.value.slice(start + 1)}`;
+  textarea.selectionStart = textarea.selectionEnd = start - 1;
+  return true;
+}
+
+function getSelectedLineRange(textarea) {
+  const value = textarea.value;
+  const start = textarea.selectionStart;
+  const end = textarea.selectionEnd;
+  const lineStart = value.lastIndexOf("\n", start - 1) + 1;
+  let lineEnd = value.indexOf("\n", end);
+  if (lineEnd === -1) {
+    lineEnd = value.length;
+  }
+  return { lineStart, lineEnd, start, end };
+}
+
+function toggleLineComment(textarea) {
+  const value = textarea.value;
+  const { lineStart, lineEnd, start, end } = getSelectedLineRange(textarea);
+  const selectedBlock = value.slice(lineStart, lineEnd);
+  const lines = selectedBlock.split("\n");
+  const uncomment = lines
+    .filter((line) => line.trim().length > 0)
+    .every((line) => /^\s*# ?/.test(line));
+
+  let deltaBeforeStart = 0;
+  let totalDelta = 0;
+  let offset = 0;
+  const nextLines = lines.map((line) => {
+    let nextLine;
+    let delta;
+    if (uncomment) {
+      nextLine = line.replace(/^(\s*)# ?/, "$1");
+      delta = nextLine.length - line.length;
+    }
+    else if (line.trim().length === 0) {
+      nextLine = line;
+      delta = 0;
+    }
+    else {
+      nextLine = line.replace(/^(\s*)/, "$1# ");
+      delta = nextLine.length - line.length;
+    }
+
+    if (lineStart + offset < start) {
+      deltaBeforeStart += delta;
+    }
+    totalDelta += delta;
+    offset += line.length + 1;
+    return nextLine;
+  });
+
+  const nextBlock = nextLines.join("\n");
+  textarea.value = `${value.slice(0, lineStart)}${nextBlock}${value.slice(lineEnd)}`;
+  textarea.selectionStart = Math.max(lineStart, start + deltaBeforeStart);
+  textarea.selectionEnd = Math.max(textarea.selectionStart, end + totalDelta);
+}
+
+function indentSelection(textarea) {
+  const indent = "    ";
+  const value = textarea.value;
+  const start = textarea.selectionStart;
+  const end = textarea.selectionEnd;
+
+  if (start === end) {
+    textarea.value = `${value.slice(0, start)}${indent}${value.slice(end)}`;
+    textarea.selectionStart = textarea.selectionEnd = start + indent.length;
+    return;
+  }
+
+  const lineStart = value.lastIndexOf("\n", start - 1) + 1;
+  const selectedText = value.slice(lineStart, end);
+  const indentedText = selectedText.replace(/^/gm, indent);
+  textarea.value = `${value.slice(0, lineStart)}${indentedText}${value.slice(end)}`;
+  textarea.selectionStart = start + indent.length;
+  textarea.selectionEnd = end + (indentedText.length - selectedText.length);
+}
+
+function outdentSelection(textarea) {
+  const value = textarea.value;
+  const start = textarea.selectionStart;
+  const end = textarea.selectionEnd;
+
+  if (start === end) {
+    const lineStart = value.lastIndexOf("\n", start - 1) + 1;
+    const beforeCursor = value.slice(lineStart, start);
+    const removable = beforeCursor.match(/ {1,4}$/)?.[0] || "";
+    if (!removable) {
+      return;
+    }
+    textarea.value = `${value.slice(0, start - removable.length)}${value.slice(end)}`;
+    textarea.selectionStart = textarea.selectionEnd = start - removable.length;
+    return;
+  }
+
+  const lineStart = value.lastIndexOf("\n", start - 1) + 1;
+  const selectedText = value.slice(lineStart, end);
+  let removedBeforeSelection = 0;
+  let removedTotal = 0;
+  const outdentedText = selectedText.replace(/^( {1,4})/gm, (match, spaces, offset) => {
+    removedTotal += spaces.length;
+    if (offset < start - lineStart) {
+      removedBeforeSelection += spaces.length;
+    }
+    return "";
+  });
+
+  textarea.value = `${value.slice(0, lineStart)}${outdentedText}${value.slice(end)}`;
+  textarea.selectionStart = Math.max(lineStart, start - removedBeforeSelection);
+  textarea.selectionEnd = Math.max(textarea.selectionStart, end - removedTotal);
+}
+
 function renderExamples(examples) {
   if (!examples.length) {
-    return `<pre>No visible examples.</pre>`;
+    return `
+      <details class="example-item" open>
+        <summary>No visible examples</summary>
+        <pre>No visible examples.</pre>
+      </details>
+    `;
   }
   return examples
-    .map((example, index) => (
-      `<pre>Example ${index + 1}\nInput: ${escapeHtml(JSON.stringify(example.input))}\nExpected: ${escapeHtml(JSON.stringify(example.expected))}</pre>`
-    ))
+    .map((example, index) => {
+      const input = JSON.stringify(example.input);
+      const expected = JSON.stringify(example.expected);
+      return `
+        <details class="example-item" ${index === 0 ? "open" : ""}>
+          <summary>Example ${index + 1}</summary>
+          <pre>Input: ${escapeHtml(input)}
+Expected: ${escapeHtml(expected)}</pre>
+        </details>
+      `;
+    })
     .join("");
 }
 
@@ -751,6 +1313,8 @@ async function submitAnswer(questionId) {
 
   const textarea = document.querySelector(`#code-${questionId}`);
   const output = document.querySelector(`#output-${questionId}`);
+  const button = document.querySelector(`[data-submit-question="${questionId}"]`);
+  const runStatus = document.querySelector(`#run-status-${questionId}`);
   const code = textarea.value.trim();
   if (!code) {
     showToast("Please enter code before submitting.");
@@ -759,7 +1323,10 @@ async function submitAnswer(questionId) {
 
   try {
     output.classList.remove("hidden");
-    output.innerHTML = "<h4>Output</h4><pre>Running tests...</pre>";
+    output.innerHTML = `<h4>Output <span class="result-pill running">Running</span></h4><pre>Running tests...</pre>`;
+    button.disabled = true;
+    button.textContent = "Running Tests...";
+    runStatus?.classList.remove("hidden");
     const result = await apiPost("/submit-answer", {
       exam_id: state.currentExam.exam_id,
       question_id: questionId,
@@ -769,15 +1336,24 @@ async function submitAnswer(questionId) {
     state.submissions.set(questionId, result);
     output.innerHTML = renderSubmissionOutput(result);
     updateScore();
+    renderQuestionStatusDots();
   } catch (error) {
     output.classList.remove("hidden");
     output.innerHTML = `<h4>Output</h4><pre>${escapeHtml(error.message)}</pre>`;
+  } finally {
+    button.disabled = false;
+    button.textContent = "Compile & Run Tests";
+    runStatus?.classList.add("hidden");
   }
 }
 
 function renderSubmissionOutput(result) {
   const statusClass = result.is_correct ? "pass" : "fail";
   const statusText = result.is_correct ? "Correct" : "Incorrect";
+  const publicTests = result.test_results.filter((test) => !test.hidden);
+  const visibleTests = publicTests.length ? publicTests : result.test_results;
+  const passedPublic = visibleTests.filter((test) => test.passed).length;
+  const firstFailedPublic = publicTests.find((test) => !test.passed);
   const tests = result.test_results
     .map((test, index) => {
       const fileResults = (test.file_results || [])
@@ -797,8 +1373,50 @@ function renderSubmissionOutput(result) {
 
   return `
     <h4>Output <span class="result-pill ${statusClass}">${statusText}</span></h4>
+    <div class="test-summary ${statusClass}">
+      <strong>${result.is_correct ? "Passed" : "Needs review"}</strong>
+      <span>Passed ${passedPublic}/${visibleTests.length} ${publicTests.length ? "public tests" : "tests"}</span>
+    </div>
+    ${firstFailedPublic ? renderFailedComparison(firstFailedPublic) : ""}
     <pre>${escapeHtml(result.feedback)}\n\n${escapeHtml(tests)}</pre>
   `;
+}
+
+function renderFailedComparison(test) {
+  return `
+    <div class="failed-comparison">
+      <div>
+        <strong>Your output</strong>
+        <pre>${escapeHtml(JSON.stringify(test.actual, null, 2))}</pre>
+      </div>
+      <div>
+        <strong>Expected</strong>
+        <pre>${escapeHtml(JSON.stringify(test.expected, null, 2))}</pre>
+      </div>
+    </div>
+  `;
+}
+
+function requestFinishExam() {
+  if (!state.currentExam) {
+    showToast("Please generate an exam first.");
+    return;
+  }
+
+  const total = state.currentExam.questions.length;
+  const answered = state.submissions.size;
+  const unanswered = total - answered;
+  if (unanswered > 0) {
+    elements.finishConfirmMessage.textContent = `You still have ${unanswered} unanswered ${unanswered === 1 ? "question" : "questions"}.`;
+  }
+  else {
+    elements.finishConfirmMessage.textContent = "All questions have a submission. You can still review before finishing.";
+  }
+  elements.finishConfirmModal.classList.remove("hidden");
+}
+
+function closeFinishConfirm() {
+  elements.finishConfirmModal.classList.add("hidden");
 }
 
 async function finishExam() {
@@ -808,6 +1426,7 @@ async function finishExam() {
   }
 
   try {
+    closeFinishConfirm();
     const report = await apiPost(`/finish-exam/${state.currentExam.exam_id}`, {});
     stopTimer();
     const passed = report.solved_questions === report.total_questions;
@@ -815,11 +1434,15 @@ async function finishExam() {
     elements.finalFeedback.innerHTML = `
       <h3>Final feedback</h3>
       <p><span class="result-pill ${passed ? "pass" : "fail"}">${passed ? "PASS" : "NOT PASS"}</span></p>
-      <p><strong>Score:</strong> ${report.solved_questions}/${report.total_questions}</p>
+      <p><strong>Solved:</strong> ${report.solved_questions}/${report.total_questions}</p>
       <p>${escapeHtml(report.summary)}</p>
       <p><strong>Weak topics:</strong> ${escapeHtml(report.weak_topics.join(", ") || "None")}</p>
       <p><strong>Suggestions:</strong></p>
       <ul>${report.suggestions.map((item) => `<li>${escapeHtml(item)}</li>`).join("")}</ul>
+      <div class="ai-feedback-entry">
+        <strong>AI learning summary</strong>
+        <p>Review weak areas, compare failed outputs, then practise the recommended topics.</p>
+      </div>
     `;
     loadHistory();
     updateScore(report.solved_questions, report.total_questions);
@@ -856,29 +1479,30 @@ function stopTimer() {
 }
 
 function renderTimer() {
-  if (state.currentExam?.mode === "practice") {
+  if (state.currentExam?.mode === "practice" || state.currentExam?.mode === "daily" || state.currentExam?.mode === "community") {
     elements.timerDisplay.textContent = "Practice";
-    elements.timerDisplay.classList.remove("warning");
+    elements.timerDisplay.classList.remove("warning", "danger");
     return;
   }
   if (!state.examEndsAt) {
-    elements.timerDisplay.textContent = "90:00";
-    elements.timerDisplay.classList.remove("warning");
+    elements.timerDisplay.textContent = "Time left: 90:00";
+    elements.timerDisplay.classList.remove("warning", "danger");
     return;
   }
   const remainingSeconds = Math.max(0, Math.ceil((state.examEndsAt - Date.now()) / 1000));
   const minutes = Math.floor(remainingSeconds / 60);
   const seconds = remainingSeconds % 60;
-  elements.timerDisplay.textContent = `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
+  elements.timerDisplay.textContent = `Time left: ${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
   elements.timerDisplay.classList.toggle("warning", remainingSeconds <= 10 * 60);
+  elements.timerDisplay.classList.toggle("danger", remainingSeconds <= 3 * 60);
 }
 
 function updateScore(forcedSolved, forcedTotal) {
   const total = forcedTotal || state.currentExam?.questions.length || 8;
   const solved = forcedSolved ?? [...state.submissions.values()].filter((submission) => submission.is_correct).length;
   elements.scoreDisplay.textContent = state.currentExam?.mode === "practice"
-    ? `${solved}/${total} solved`
-    : (solved === total ? "PASS" : `${solved}/${total}`);
+    ? `Solved: ${solved}/${total}`
+    : (solved === total ? "PASS" : `Solved: ${solved}/${total}`);
 }
 
 async function loadWrongQuestions() {
@@ -889,9 +1513,11 @@ async function loadWrongQuestions() {
   try {
     const items = await apiGet(`/wrong-questions?username=${encodeURIComponent(state.username)}`);
     if (!items.length) {
+      elements.wrongBadge.textContent = "0";
       elements.wrongList.innerHTML = `<div class="empty-state">No wrong questions yet. Start an exam and submit answers to build this collection.</div>`;
       return;
     }
+    elements.wrongBadge.textContent = String(items.length);
     elements.wrongList.innerHTML = items.map(wrongQuestionTemplate).join("");
   } catch (error) {
     elements.wrongList.innerHTML = `<div class="empty-state">${escapeHtml(error.message)}</div>`;
@@ -921,6 +1547,7 @@ function wrongQuestionTemplate(item) {
 async function loadHistory() {
   try {
     const items = await apiGet("/history");
+    elements.historyBadge.textContent = String(items.length);
     if (!items.length) {
       elements.historyList.innerHTML = `<div class="empty-state">No exam history yet.</div>`;
       return;

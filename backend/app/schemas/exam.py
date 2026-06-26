@@ -87,3 +87,34 @@ class WrongQuestionOut(BaseModel):
     feedback: str
     error_message: str | None = None
     created_at: datetime
+
+
+class DailyQuestionOut(BaseModel):
+    date: str
+    exam_id: int
+    question: QuestionOut
+    attempts: int
+    solved: int
+    solve_rate: float
+
+
+class ShareQuestionRequest(BaseModel):
+    username: str = Field(..., min_length=1, max_length=80)
+    title: str = Field(..., min_length=3, max_length=160)
+    description: str = Field(..., min_length=10)
+    topic: str = Field("community", min_length=1, max_length=80)
+    difficulty: str = Field("medium", pattern="^(easy|medium|hard)$")
+    function_signature: str = Field(..., min_length=3, max_length=160)
+    examples: list[dict] = Field(..., min_length=1)
+    note: str = Field("", max_length=500)
+
+
+class SharedQuestionOut(BaseModel):
+    share_id: int
+    question: QuestionOut
+    creator_username: str
+    note: str
+    attempts: int
+    solved: int
+    solve_rate: float
+    created_at: datetime

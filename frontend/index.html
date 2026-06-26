@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Python Exam Agent</title>
-    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="styles.css?v=20260627-home-community">
   </head>
   <body>
     <header class="topbar">
@@ -69,21 +69,54 @@
               </div>
             </div>
             <nav class="tabs" aria-label="Main sections">
-              <button class="tab active" type="button" data-view="homeSection">Home</button>
-              <button class="tab" type="button" data-view="descriptionSection">Description</button>
-              <button class="tab" type="button" data-view="aiSection">AI Generator</button>
-              <button class="tab" type="button" data-view="wrongSection">Wrong Questions</button>
-              <button class="tab" type="button" data-view="historySection">History</button>
+              <button class="tab active" type="button" data-view="homeSection"><span class="nav-icon">⌂</span>Home</button>
+              <button class="tab" type="button" data-view="descriptionSection"><span class="nav-icon">□</span>Description</button>
+              <button class="tab ai-tab" type="button" data-view="aiSection"><span class="nav-icon">✦</span>AI Generator <span class="menu-badge ai">AI</span></button>
+              <button class="tab" type="button" data-view="wrongSection"><span class="nav-icon">!</span>Wrong Questions <span id="wrongBadge" class="menu-badge">0</span></button>
+              <button class="tab" type="button" data-view="historySection"><span class="nav-icon">◷</span>History <span id="historyBadge" class="menu-badge">0</span></button>
             </nav>
           </aside>
 
           <div class="content-area">
             <section id="homeSection" class="view-section">
-              <div class="start-panel">
-                <img src="assets/app-logo.png" alt="Python Exam Agent logo">
-                <p class="eyebrow">Ready</p>
-                <h2>Start Test</h2>
-                <button id="homeStartButton" type="button">Start Test</button>
+              <div class="home-dashboard">
+                <div class="start-panel">
+                  <img src="assets/app-logo.png" alt="Python Exam Agent logo">
+                  <p class="eyebrow">Ready</p>
+                  <h2>Start Test</h2>
+                  <p>Begin one balanced 8-question Python exam immediately.</p>
+                  <button id="homeStartButton" type="button">Start Test</button>
+                </div>
+
+                <div class="daily-panel">
+                  <div>
+                    <p class="eyebrow">Daily Challenge</p>
+                    <h3 id="dailyTitle">One question for today</h3>
+                    <p id="dailyMeta">Practise one Python question every day and build a steady habit.</p>
+                  </div>
+                  <button id="dailyChallengeButton" class="secondary" type="button">Start Daily Question</button>
+                </div>
+
+                <div class="share-panel">
+                  <div>
+                    <p class="eyebrow">Community Question</p>
+                    <h3>Share a favourite question</h3>
+                    <p>Other users can solve it, and the card will show how many people answered and the correct rate.</p>
+                  </div>
+                  <form id="shareQuestionForm" class="share-form">
+                    <input id="shareTitleInput" type="text" placeholder="Question title" required>
+                    <input id="shareSignatureInput" type="text" placeholder="function_name(arg)" required>
+                    <select id="shareDifficultyInput">
+                      <option value="easy">easy</option>
+                      <option value="medium" selected>medium</option>
+                      <option value="hard">hard</option>
+                    </select>
+                    <textarea id="shareDescriptionInput" placeholder="Describe the task clearly." required></textarea>
+                    <textarea id="shareExamplesInput" placeholder='Examples JSON: [{"input":{"text":"apple"},"expected":"aple"}]' required></textarea>
+                    <button type="submit">Share Question</button>
+                  </form>
+                  <div id="sharedQuestionList" class="shared-question-list"></div>
+                </div>
               </div>
             </section>
 
@@ -133,7 +166,7 @@
             <span class="status-pill">Time limit: 90 minutes</span>
           </div>
 
-          <div class="launch-grid">
+          <div id="examLaunchGrid" class="launch-grid hidden">
           <form id="examForm" class="exam-launch-card">
             <div class="exam-launch-copy">
               <strong>Full exam package</strong>
@@ -165,8 +198,9 @@
             <div class="question-pager">
               <button id="prevQuestionButton" class="secondary" type="button">Previous</button>
               <span id="questionProgress">Question 1 of 8</span>
-              <button id="nextQuestionButton" class="secondary" type="button">Next</button>
+              <button id="nextQuestionButton" class="secondary" type="button">Save & Next</button>
             </div>
+            <div id="questionStatusDots" class="question-status-dots" aria-label="Question status navigation"></div>
             <div id="questionList" class="question-list"></div>
             <div id="finalFeedback" class="feedback-panel hidden"></div>
           </div>
@@ -377,7 +411,19 @@
       </div>
     </section>
 
+    <section id="finishConfirmModal" class="modal-backdrop hidden" aria-label="Finish exam confirmation">
+      <div class="modal-card">
+        <p class="eyebrow">Finish Exam</p>
+        <h2>Are you sure you want to finish the exam?</h2>
+        <p id="finishConfirmMessage">You still have unanswered questions.</p>
+        <div class="modal-actions">
+          <button id="cancelFinishButton" class="secondary" type="button">Cancel</button>
+          <button id="confirmFinishButton" type="button">Finish Exam</button>
+        </div>
+      </div>
+    </section>
+
     <div id="toast" class="toast hidden"></div>
-    <script src="app.js"></script>
+    <script src="app.js?v=20260627-home-community"></script>
   </body>
 </html>
